@@ -1,6 +1,10 @@
 *.class
 
 # Package Files #
-*.jar
+MineResetLite.jar
 *.war
 *.ear
+
+# IntelliJ Stuff #
+.idea
+*.iml

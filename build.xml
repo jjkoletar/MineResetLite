@@ -1,0 +1,19 @@
+<project name="MineResetLite" default="build">
+    <target name="build">
+        <mkdir dir="build"/>
+        <javac srcdir="src" destdir="build" debug="on">
+            <classpath>
+                <fileset dir="lib">
+                    <include name="*.jar"/>
+                </fileset>
+            </classpath>
+        </javac>
+        <copy todir="build">
+            <fileset dir=".">
+                <include name="*.yml"/>
+            </fileset>
+        </copy>
+        <jar jarfile="MineResetLite.jar" basedir="build"/>
+        <delete dir="build"/>
+    </target>
+</project>
