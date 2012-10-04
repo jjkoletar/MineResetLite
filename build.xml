@@ -9,8 +9,9 @@
             </classpath>
         </javac>
         <copy todir="build">
-            <fileset dir=".">
+            <fileset dir="src">
                 <include name="*.yml"/>
+                <include name="**/*.properties"/>
             </fileset>
         </copy>
         <jar jarfile="MineResetLite.jar" basedir="build"/>
