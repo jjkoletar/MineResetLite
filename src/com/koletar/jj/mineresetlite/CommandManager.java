@@ -15,6 +15,7 @@ import java.util.Map;
  * Specific command manager. Far less genericizied than sk89q's.
  * </p>
  * MRL's command system is very much based on sk89q's command system for WorldEdit.
+ *
  * @author jjkoletar
  */
 public class CommandManager {
@@ -45,15 +46,40 @@ public class CommandManager {
             description = "Provide information about MineResetLite commands",
             min = 0, max = -1)
     public void help(CommandSender sender, String[] args) {
+        if (args.length >= 1) {
+            //Subcommand help?
+            if (commands.containsKey(args[0].toLowerCase())) {
+                Command command = commands.get(args[0].toLowerCase()).getAnnotation(Command.class);
+                sender.sendMessage(ChatColor.YELLOW + "/mrl " + command.aliases()[0] + " " + command.usage());
+                for (String help : command.help()) {
+                    sender.sendMessage(ChatColor.GRAY + help);
+                }
+                return;
+            }
+        }
         List<Method> seenMethods = new LinkedList<Method>();
         for (Map.Entry<String, Method> entry : commands.entrySet()) {
             if (!seenMethods.contains(entry.getValue())) {
                 seenMethods.add(entry.getValue());
                 Command command = entry.getValue().getAnnotation(Command.class);
                 //Only show help if the sender can use the command anyway
-               // if ((sender instanceof Player && command.onlyPlayers() && ) )
+                if ((command.onlyPlayers() && !(sender instanceof Player))) {
+                    continue;
+                }
+                boolean may = false;
+                for (String perm : command.permissions()) {
+                    if (sender.hasPermission(perm)) {
+                        may = true;
+                    }
+                }
+                if (!may) {
+                    continue;
+                }
+                sender.sendMessage(ChatColor.YELLOW + "/mrl " + command.aliases()[0] + " " + command.usage());
+                sender.sendMessage(ChatColor.YELLOW + " - " + command.description());
             }
         }
+
     }
 
     public void callCommand(String cmdName, CommandSender sender, String[] args) {

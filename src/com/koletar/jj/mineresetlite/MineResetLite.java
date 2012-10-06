@@ -6,12 +6,17 @@ import org.apache.commons.io.IOUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.mcstats.Metrics;
+import org.yaml.snakeyaml.Yaml;
+import sun.net.www.MimeEntry;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,7 +38,11 @@ public class MineResetLite extends JavaPlugin {
     private WorldEditPlugin worldEdit = null;
     private Metrics metrics = null;
     private int saveTaskId = -1;
+    private int resetTaskId = -1;
 
+    static {
+        ConfigurationSerialization.registerClass(Mine.class);
+    }
     public void onEnable() {
         mines = new ArrayList<Mine>();
         logger = getLogger();
@@ -60,11 +69,40 @@ public class MineResetLite extends JavaPlugin {
             logger.warning("MineResetLite couldn't initialize metrics!");
             e.printStackTrace();
         }          */
+        //Load mines
+        File[] mineFiles = new File(getDataFolder(), "mines").listFiles(new FilenameFilter() {
+            public boolean accept(File file, String s) {
+                return s.contains(".mine.yml");
+            }
+        });
+        for (File file : mineFiles) {
+            FileConfiguration fileConf = YamlConfiguration.loadConfiguration(file);
+            try {
+                Object o = fileConf.get("mine");
+                if (!(o instanceof Mine)) {
+                    logger.severe("Mine wasn't a mine object! Something is off with serialization!");
+                    continue;
+                }
+                Mine mine = (Mine) o;
+                mines.add(mine);
+            } catch (Throwable t) {
+                logger.severe("Unable to load mine!");
+            }
+        }
+        resetTaskId = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+            public void run() {
+                for (Mine mine : mines) {
+                    mine.cron();
+                }
+            }
+        }, 60 * 20L, 60 * 20L);
         logger.info("MineResetLite version " + getDescription().getVersion() + " enabled!");
     }
 
     public void onDisable() {
-
+        getServer().getScheduler().cancelTask(resetTaskId);
+        save();
+        logger.info("MineResetLite disabled");
     }
 
     public Mine[] matchMines(String in) {
@@ -88,11 +126,30 @@ public class MineResetLite extends JavaPlugin {
             scheduler.cancelTask(saveTaskId);
         }
         //Schedule save
-
+        final MineResetLite plugin = this;
+        scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+            public void run() {
+                plugin.save();
+            }
+        }, 60 * 20L);
     }
 
     public void save() {
-        //TODO: implement
+        for (Mine mine : mines) {
+            File mineFile = getMineFile(mine);
+            FileConfiguration mineConf = YamlConfiguration.loadConfiguration(mineFile);
+            mineConf.set("mine", mine);
+            try {
+                mineConf.save(mineFile);
+            } catch (IOException e) {
+                logger.severe("Unable to serialize mine!");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private File getMineFile(Mine mine) {
+        return new File(new File(getDataFolder(), "mines"), mine.getName().replace(" ", "") + ".mine.yml");
     }
 
     public boolean hasWorldEdit() {

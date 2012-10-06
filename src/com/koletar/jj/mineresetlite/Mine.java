@@ -4,10 +4,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -24,6 +26,9 @@ public class Mine implements ConfigurationSerializable {
     private int maxZ;
     private World world;
     private Map<SerializableBlock, Double> composition;
+    private long resetTime;
+    private int resetDelay;
+    private List<Integer> resetWarnings;
     private String name;
 
     public Mine(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, String name, World world) {
@@ -36,16 +41,17 @@ public class Mine implements ConfigurationSerializable {
         this.name = name;
         this.world = world;
         composition = new HashMap<SerializableBlock, Double>();
+        resetWarnings = new LinkedList<Integer>();
     }
 
     public Mine(Map<String, Object> me) {
         try {
-            minX = ((Integer) me.get("minX")).intValue();
-            minY = ((Integer) me.get("minY")).intValue();
-            minZ = ((Integer) me.get("minZ")).intValue();
-            maxX = ((Integer) me.get("maxX")).intValue();
-            maxY = ((Integer) me.get("maxY")).intValue();
-            maxZ = ((Integer) me.get("maxZ")).intValue();
+            minX = (Integer) me.get("minX");
+            minY = (Integer) me.get("minY");
+            minZ = (Integer) me.get("minZ");
+            maxX = (Integer) me.get("maxX");
+            maxY = (Integer) me.get("maxY");
+            maxZ = (Integer) me.get("maxZ");
         } catch (Throwable t) {
             throw new IllegalArgumentException("Error deserializing coordinate pairs");
         }
@@ -62,6 +68,18 @@ public class Mine implements ConfigurationSerializable {
             }
         } catch (Throwable t) {
             throw new IllegalArgumentException("Error deserializing composition");
+        }
+        name = (String) me.get("name");
+        resetTime = Long.valueOf(me.get("resetTime").toString());
+        resetDelay = (Integer) me.get("resetDelay");
+        List<String> warnings = (List<String>) me.get("resetWarnings");
+        resetWarnings = new LinkedList<Integer>();
+        for (String warning : warnings) {
+            try {
+                resetWarnings.add(Integer.valueOf(warning));
+            } catch (NumberFormatException nfe) {
+                throw new IllegalArgumentException("Non-numeric reset warnings supplied");
+            }
         }
     }
 
@@ -80,7 +98,40 @@ public class Mine implements ConfigurationSerializable {
             sComposition.put(entry.getKey().toString(), entry.getValue());
         }
         me.put("composition", sComposition);
+        me.put("name", name);
+        me.put("resetTime", resetTime);
+        me.put("resetDelay", resetDelay);
+        List<String> warnings = new LinkedList<String>();
+        for (Integer warning : resetWarnings) {
+            warnings.add(warning.toString());
+        }
+        me.put("resetWarnings", warnings);
         return me;
+    }
+
+    public void setResetDelay(int minutes) {
+        resetDelay = minutes;
+        resetTime = world.getFullTime() + (resetDelay * 60L * 20L);
+    }
+
+    public void setResetWarnings(List<Integer> warnings) {
+        resetWarnings = warnings;
+    }
+
+    public List<Integer> getResetWarnings() {
+        return resetWarnings;
+    }
+
+    public int getResetDelay() {
+        return resetDelay;
+    }
+
+    public double getMinutesUntilReset() {
+        return  ((double) (resetTime - world.getFullTime())) / 20;
+    }
+
+    public long getResetTime() {
+        return resetTime;
     }
 
     public World getWorld() {
@@ -120,6 +171,24 @@ public class Mine implements ConfigurationSerializable {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    public void cron() {
+        if (resetDelay == 0) {
+            return;
+        }
+        long worldTime = world.getFullTime();
+        if (worldTime >= resetTime) {
+            reset();
+            resetTime = world.getFullTime() + (resetDelay * 60L * 20L);
+            Bukkit.getServer().broadcastMessage(Phrases.phrase("mineAutoResetBroadcast", this));
+        }
+        int minutesUntilReset = (int) ((resetTime - worldTime) / (60 * 20));
+        for (Integer warning : resetWarnings) {
+            if (warning == minutesUntilReset) {
+                Bukkit.getServer().broadcastMessage(Phrases.phrase("mineWarningBroadcast", this, warning));
             }
         }
     }

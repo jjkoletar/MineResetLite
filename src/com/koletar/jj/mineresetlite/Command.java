@@ -29,6 +29,11 @@ public @interface Command {
     String description();
 
     /**
+     * @return Multilined help text describing the command in full
+     */
+    String[] help() default {};
+
+    /**
      * Permissions necessary for the execution of the command.
      * An empty array (the default) means the command requires no permissions.
      * @return Permissions array

@@ -14,6 +14,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import static com.koletar.jj.mineresetlite.Phrases.phrase;
@@ -35,6 +37,7 @@ public class MineCommands {
     @Command(aliases = {"list", "l"},
             description = "List the names of all Mines",
             permissions = {"mineresetlite.mine.list"},
+            help = {"List the names of all Mines currently created, across all worlds."},
             min = 0, max = 0, onlyPlayers = false)
     public void listMines(CommandSender sender, String[] args) {
         StringBuilder response = new StringBuilder();
@@ -51,7 +54,9 @@ public class MineCommands {
 
     @Command(aliases = {"pos1", "p1"},
             description = "Change your first selection point",
-            usage = "(feet)",
+            help = {"Run this command to set your first selection point to the block you are looking at.",
+                    "Use /mrl pos1 -feet to set your first point to the location you are standing on."},
+            usage = "(-feet)",
             permissions = {"mineresetlite.mine.create", "mineresetlite.mine.redefine"},
             min = 0, max = 1, onlyPlayers = true)
     public void setPoint1(CommandSender sender, String[] args) {
@@ -61,7 +66,7 @@ public class MineCommands {
             point1.put(player, player.getEyeLocation());
             player.sendMessage(phrase("firstPointSet"));
             return;
-        } else if (args[0].equalsIgnoreCase("feet")) {
+        } else if (args[0].equalsIgnoreCase("-feet")) {
             //Use block being stood on
             point1.put(player, player.getLocation());
             player.sendMessage(phrase("firstPointSet"));
@@ -71,7 +76,9 @@ public class MineCommands {
 
     @Command(aliases = {"pos2", "p2"},
             description = "Change your first selection point",
-            usage = "(feet)",
+            help = {"Run this command to set your second selection point to the block you are looking at.",
+                    "Use /mrl pos2 -feet to set your second point to the location you are standing on."},
+            usage = "(-feet)",
             permissions = {"mineresetlite.mine.create", "mineresetlite.mine.redefine"},
             min = 0, max = 1, onlyPlayers = true)
     public void setPoint2(CommandSender sender, String[] args) {
@@ -81,7 +88,7 @@ public class MineCommands {
             point2.put(player, player.getEyeLocation());
             player.sendMessage(phrase("secondPointSet"));
             return;
-        } else if (args[0].equalsIgnoreCase("feet")) {
+        } else if (args[0].equalsIgnoreCase("-feet")) {
             //Use block being stood on
             point2.put(player, player.getLocation());
             player.sendMessage(phrase("secondPointSet"));
@@ -91,6 +98,8 @@ public class MineCommands {
 
     @Command(aliases = {"create", "save"},
             description = "Create a mine from either your WorldEdit selection or by manually specifying the points",
+            help = {"Provided you have a selection made via either WorldEdit or selecting the points using MRL,",
+                    "an empty mine will be created. This mine will have no composition and default settings."},
             usage = "<mine name>",
             permissions = {"mineresetlite.mine.create"},
             min = 1, max = -1, onlyPlayers = true)
@@ -158,6 +167,7 @@ public class MineCommands {
         Mine newMine = new Mine(p1.getBlockX(), p1.getBlockY(), p1.getBlockZ(), p2.getBlockX(), p2.getBlockY(), p2.getBlockZ(), name, world);
         plugin.mines.add(newMine);
         player.sendMessage(phrase("mineCreated", newMine));
+        plugin.buffSave();
     }
 
     @Command(aliases = {"info", "i"},
@@ -198,10 +208,25 @@ public class MineCommands {
             csb.delete(csb.length() - 2, csb.length() - 1);
         }
         sender.sendMessage(phrase("mineInfoComposition", csb));
+        if (mines[0].getResetDelay() != 0) {
+            sender.sendMessage(phrase("mineInfoResetDelay", mines[0].getResetDelay()));
+            StringBuilder wsb = new StringBuilder();
+            for (Integer warning : mines[0].getResetWarnings()) {
+                wsb.append(warning);
+                wsb.append(", ");
+            }
+            if (wsb.length() > 2) {
+                wsb.delete(wsb.length() - 2, wsb.length());
+            }
+            sender.sendMessage(phrase("mineInfoWarningTimes", wsb.toString()));
+        }
     }
 
     @Command(aliases = {"set", "add", "+"},
             description = "Set the percentage of a block in the mine",
+            help = {"This command will always overwrite the current percentage for the specified block,",
+                    "if a percentage has already been set. You cannot set the percentage of any specific",
+                    "block, such that the percentage would then total over 100%."},
             usage = "<mine name> <block>:(data) <percentage>%",
             permissions = {"mineresetlite.mine.composition"},
             min = 3, max = -1, onlyPlayers = false)
@@ -277,6 +302,7 @@ public class MineCommands {
             return;
         }
         sender.sendMessage(phrase("mineCompositionSet", mines[0], percentage * 100, block));
+        plugin.buffSave();
     }
 
     @Command(aliases = {"unset", "remove", "-"},
@@ -329,10 +355,15 @@ public class MineCommands {
             }
         }
         sender.sendMessage(phrase("blockNotInMine", mines[0], block));
+        plugin.buffSave();
     }
 
     @Command(aliases = {"reset", "r"},
             description = "Reset a mine",
+            help = {"If you supply the -s argument, the mine will silently reset. Resets triggered via",
+                    "this command will not show a 1 minute warning, unless this mine is flagged to always",
+                    "have a warning. If the mine's composition doesn't equal 100%, the composition will be",
+                    "padded with air until the total equals 100%."},
             usage = "<mine name> (-s)",
             permissions = {"mineresetlite.mine.reset"},
             min = 1, max = -1, onlyPlayers = false)
@@ -360,5 +391,111 @@ public class MineCommands {
             mines[0].reset();
             plugin.getServer().broadcastMessage(phrase("mineResetBroadcast", mines[0], sender));
         }
+    }
+
+    @Command(aliases = {"flag", "f"},
+            description = "Set various properties of a mine, including automatic resets",
+            help = {"Available flags:",
+                    "resetDelay: An integer number of minutes specifying the time between automatic resets. Set to 0 to disable automatic resets.",
+                    "resetWarnings: A comma separated list of integer minutes to warn before the automatic reset. Warnings must be less than the reset delay."},
+            usage = "<mine name> <setting> <value>",
+            permissions = {"mineresetlite.mine.flag"},
+            min = 3, max = -1, onlyPlayers = false)
+    public void flag(CommandSender sender, String[] args) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < args.length - 2; i++) {
+            sb.append(args[i]);
+            sb.append(" ");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        Mine[] mines = plugin.matchMines(sb.toString());
+        if (mines.length > 1) {
+            sender.sendMessage(phrase("tooManyMines"));
+            return;
+        } else if (mines.length == 0) {
+            sender.sendMessage(phrase("noMinesMatched"));
+            return;
+        }
+        String setting = args[args.length - 2];
+        String value = args[args.length - 1];
+        if (setting.equalsIgnoreCase("resetEvery") || setting.equalsIgnoreCase("resetDelay")) {
+            int delay;
+            try {
+                delay = Integer.valueOf(value);
+            } catch (NumberFormatException nfe) {
+                sender.sendMessage(phrase("badResetDelay"));
+                return;
+            }
+            if (delay < 0) {
+                sender.sendMessage(phrase("badResetDelay"));
+                return;
+            }
+            mines[0].setResetDelay(delay);
+            if (delay == 0) {
+                sender.sendMessage(phrase("resetDelayCleared", mines[0]));
+            } else {
+                sender.sendMessage(phrase("resetDelaySet", mines[0], delay));
+            }
+            plugin.buffSave();
+            return;
+        } else if (setting.equalsIgnoreCase("resetWarnings") || setting.equalsIgnoreCase("resetWarning")) {
+            String[] bits = value.split(",");
+            List<Integer> warnings = mines[0].getResetWarnings();
+            List<Integer> oldList = new LinkedList<Integer>(warnings);
+            warnings.clear();
+            for (String bit : bits) {
+                try {
+                    warnings.add(Integer.valueOf(bit));
+                } catch (NumberFormatException nfe) {
+                    sender.sendMessage(phrase("badWarningList"));
+                    return;
+                }
+            }
+            //Validate warnings
+            for (Integer warning : warnings) {
+                if (warning >= mines[0].getResetDelay()) {
+                    sender.sendMessage(phrase("badWarningList"));
+                    mines[0].setResetWarnings(oldList);
+                    return;
+                }
+            }
+            if (warnings.contains(0) && warnings.size() == 1) {
+                warnings.clear();
+                sender.sendMessage(phrase("warningListCleared", mines[0]));
+                return;
+            } else if (warnings.contains(0)) {
+                sender.sendMessage(phrase("badWarningList"));
+                mines[0].setResetWarnings(oldList);
+                return;
+            }
+            sender.sendMessage(phrase("warningListSet", mines[0]));
+            plugin.buffSave();
+            return;
+        }
+        sender.sendMessage(phrase("unknownFlag"));
+    }
+    @Command(aliases = {"erase"},
+            description = "Completely erase a mine",
+            help = {"Like most erasures of data, be sure you don't need to recover anything from this mine before you delete it."},
+            usage = "<mine name>",
+            permissions = {"mineresetlite.mine.erase"},
+            min = 1, max = -1, onlyPlayers = false)
+    public void erase(CommandSender sender, String[] args) {
+        StringBuilder sb = new StringBuilder();
+        for (String arg : args) {
+            sb.append(arg);
+            sb.append(" ");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        Mine[] mines = plugin.matchMines(sb.toString());
+        if (mines.length > 1) {
+            sender.sendMessage(phrase("tooManyMines"));
+            return;
+        } else if (mines.length == 0) {
+            sender.sendMessage(phrase("noMinesMatched"));
+            return;
+        }
+        plugin.mines.remove(mines[0]);
+        sender.sendMessage(phrase("mineErased", mines[0]));
     }
 }
