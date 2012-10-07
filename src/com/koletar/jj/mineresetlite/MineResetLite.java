@@ -11,8 +11,6 @@ import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.mcstats.Metrics;
-import org.yaml.snakeyaml.Yaml;
-import sun.net.www.MimeEntry;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -62,13 +60,13 @@ public class MineResetLite extends JavaPlugin {
             worldEdit = (WorldEditPlugin) getServer().getPluginManager().getPlugin("WorldEdit");
         }
         //Metrics
-        /*try {       //TODO: Remove dev negation of stats
+        try {
             metrics = new Metrics(this);
             metrics.start();
         } catch (IOException e) {
             logger.warning("MineResetLite couldn't initialize metrics!");
             e.printStackTrace();
-        }          */
+        }
         //Load mines
         File[] mineFiles = new File(getDataFolder(), "mines").listFiles(new FilenameFilter() {
             public boolean accept(File file, String s) {
