@@ -63,7 +63,7 @@ public class MineCommands {
         Player player = (Player) sender;
         if (args.length == 0) {
             //Use block being looked at
-            point1.put(player, player.getEyeLocation());
+            point1.put(player, player.getTargetBlock(null, 100).getLocation());
             player.sendMessage(phrase("firstPointSet"));
             return;
         } else if (args[0].equalsIgnoreCase("-feet")) {
@@ -85,7 +85,7 @@ public class MineCommands {
         Player player = (Player) sender;
         if (args.length == 0) {
             //Use block being looked at
-            point2.put(player, player.getEyeLocation());
+            point2.put(player, player.getTargetBlock(null, 100).getLocation());
             player.sendMessage(phrase("secondPointSet"));
             return;
         } else if (args[0].equalsIgnoreCase("-feet")) {
