@@ -42,7 +42,7 @@ public class MineCommands {
     public void listMines(CommandSender sender, String[] args) {
         StringBuilder response = new StringBuilder();
         for (Mine mine : plugin.mines) {
-            response.append("&e");
+            response.append("&c");
             response.append(mine.getName());
             response.append("&d, ");
         }
