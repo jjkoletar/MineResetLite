@@ -1,6 +1,7 @@
 package com.koletar.jj.mineresetlite;
 
 import com.koletar.jj.mineresetlite.commands.MineCommands;
+import com.koletar.jj.mineresetlite.commands.PluginCommands;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import org.apache.commons.io.IOUtils;
 import org.bukkit.Material;
@@ -54,6 +55,7 @@ public class MineResetLite extends JavaPlugin {
         commandManager = new CommandManager();
         commandManager.register(MineCommands.class, new MineCommands(this));
         commandManager.register(CommandManager.class, commandManager);
+        commandManager.register(PluginCommands.class, new PluginCommands(this));
         Locale locale = Locale.ENGLISH;
         Phrases.getInstance().initialize(locale);
         //Look for worldedit
