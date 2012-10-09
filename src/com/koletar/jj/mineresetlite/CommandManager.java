@@ -11,6 +11,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static com.koletar.jj.mineresetlite.Phrases.phrase;
+
 /**
  * Specific command manager. Far less genericizied than sk89q's.
  * </p>
@@ -50,7 +52,7 @@ public class CommandManager {
             //Subcommand help?
             if (commands.containsKey(args[0].toLowerCase())) {
                 Command command = commands.get(args[0].toLowerCase()).getAnnotation(Command.class);
-                sender.sendMessage(ChatColor.YELLOW + "/mrl " + command.aliases()[0] + " " + command.usage());
+                sender.sendMessage(phrase("helpUsage", command.aliases()[0], command.usage()));
                 for (String help : command.help()) {
                     sender.sendMessage(ChatColor.GRAY + help);
                 }
@@ -75,8 +77,8 @@ public class CommandManager {
                 if (!may) {
                     continue;
                 }
-                sender.sendMessage(ChatColor.YELLOW + "/mrl " + command.aliases()[0] + " " + command.usage());
-                sender.sendMessage(ChatColor.YELLOW + " - " + command.description());
+                sender.sendMessage(phrase("helpUsage", command.aliases()[0], command.usage()));
+                sender.sendMessage(phrase("helpDesc", command.description()));
             }
         }
 
@@ -86,7 +88,7 @@ public class CommandManager {
         //Do we have the command?
         Method method = commands.get(cmdName.toLowerCase());
         if (method == null) {
-            sender.sendMessage(ChatColor.DARK_RED + "Unknown command.");
+            sender.sendMessage(phrase("unknownCommand"));
             return;
         }
         //Get annotation
@@ -94,14 +96,14 @@ public class CommandManager {
 
         //Validate arguments
         if (!(command.min() <= args.length && (command.max() == -1 || command.max() >= args.length))) {
-            sender.sendMessage(ChatColor.DARK_RED + "Invalid arguments.");
-            sender.sendMessage(ChatColor.DARK_RED + "/mrl " + command.aliases()[0] + " " + command.usage());
+            sender.sendMessage(phrase("invalidArguments"));
+            sender.sendMessage(phrase("invalidArgsUsage", command.aliases()[0], command.usage()));
             return;
         }
 
         //Player or console?
         if (command.onlyPlayers() && !(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.DARK_RED + "You must be a player to use this command.");
+            sender.sendMessage(phrase("notAPlayer"));
             return;
         }
 
@@ -116,7 +118,7 @@ public class CommandManager {
             }
         }
         if (!may) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to do that.");
+            sender.sendMessage(phrase("noPermission"));
             return;
         }
 
