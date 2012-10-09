@@ -3,6 +3,7 @@ package com.koletar.jj.mineresetlite;
 import com.koletar.jj.mineresetlite.commands.MineCommands;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import org.apache.commons.io.IOUtils;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -101,6 +102,40 @@ public class MineResetLite extends JavaPlugin {
         getServer().getScheduler().cancelTask(resetTaskId);
         save();
         logger.info("MineResetLite disabled");
+    }
+
+    public Material matchMaterial(String name) {
+        //If anyone can think of a more elegant way to serve this function, let me know. ~jj
+        if (name.equalsIgnoreCase("diamondore")) {
+            return Material.DIAMOND_ORE;
+        } else if (name.equalsIgnoreCase("diamondblock")) {
+            return Material.DIAMOND_BLOCK;
+        } else if (name.equalsIgnoreCase("ironore")) {
+            return Material.IRON_ORE;
+        } else if (name.equalsIgnoreCase("ironblock")) {
+            return Material.IRON_BLOCK;
+        } else if (name.equalsIgnoreCase("goldore")) {
+            return Material.GOLD_ORE;
+        } else if (name.equalsIgnoreCase("goldblock")) {
+            return Material.GOLD_BLOCK;
+        } else if (name.equalsIgnoreCase("coalore")) {
+            return Material.COAL_ORE;
+        } else if (name.equalsIgnoreCase("cake") || name.equalsIgnoreCase("cakeblock")) {
+            return Material.CAKE_BLOCK;
+        } else if (name.equalsIgnoreCase("emeraldore")) {
+            return Material.EMERALD_ORE;
+        } else if (name.equalsIgnoreCase("emeraldblock")) {
+            return Material.EMERALD_BLOCK;
+        } else if (name.equalsIgnoreCase("lapisore")) {
+            return Material.LAPIS_ORE;
+        } else if (name.equalsIgnoreCase("lapisblock")) {
+            return Material.LAPIS_BLOCK;
+        } else if (name.equalsIgnoreCase("snowblock") || name.equalsIgnoreCase("snow")) { //I've never seen a mine with snowFALL in it.
+            return Material.SNOW_BLOCK;                                                   //Maybe I'll be proven wrong, but it helps 99% of admins.
+        } else if (name.equalsIgnoreCase("redstoneore")) {
+            return Material.REDSTONE_ORE;
+        }
+        return Material.matchMaterial(name);
     }
 
     public Mine[] matchMines(String in) {

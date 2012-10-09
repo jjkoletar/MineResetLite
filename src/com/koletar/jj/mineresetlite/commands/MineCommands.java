@@ -252,7 +252,7 @@ public class MineCommands {
         }
         //Match material
         String[] bits = args[args.length - 2].split(":");
-        Material m = Material.matchMaterial(bits[0]);
+        Material m = plugin.matchMaterial(bits[0]);
         if (m == null) {
             sender.sendMessage(phrase("unknownBlock"));
             return;
@@ -337,7 +337,7 @@ public class MineCommands {
         }
         //Match material
         String[] bits = args[args.length - 1].split(":");
-        Material m = Material.matchMaterial(bits[0]);
+        Material m = plugin.matchMaterial(bits[0]);
         if (m == null) {
             sender.sendMessage(phrase("unknownBlock"));
             return;
