@@ -117,6 +117,7 @@ public class CommandManager {
         }
         if (!may) {
             sender.sendMessage(ChatColor.RED + "You don't have permission to do that.");
+            return;
         }
 
         //Run command
