@@ -130,8 +130,13 @@ public class CommandManager {
             e.printStackTrace();
             throw new RuntimeException("Invalid methods on command!");
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Invalid methods on command!");
+            if (e.getCause() instanceof InvalidCommandArgumentsException) {
+                sender.sendMessage(phrase("invalidArguments"));
+                sender.sendMessage(phrase("invalidArgsUsage", command.aliases()[0], command.usage()));
+            } else {
+                e.printStackTrace();
+                throw new RuntimeException("Invalid methods on command!");
+            }
         }
     }
 }

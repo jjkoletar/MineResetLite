@@ -1,6 +1,7 @@
 package com.koletar.jj.mineresetlite.commands;
 
 import com.koletar.jj.mineresetlite.Command;
+import com.koletar.jj.mineresetlite.InvalidCommandArgumentsException;
 import com.koletar.jj.mineresetlite.Mine;
 import com.koletar.jj.mineresetlite.MineResetLite;
 import com.koletar.jj.mineresetlite.SerializableBlock;
@@ -59,7 +60,7 @@ public class MineCommands {
             usage = "(-feet)",
             permissions = {"mineresetlite.mine.create", "mineresetlite.mine.redefine"},
             min = 0, max = 1, onlyPlayers = true)
-    public void setPoint1(CommandSender sender, String[] args) {
+    public void setPoint1(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
         Player player = (Player) sender;
         if (args.length == 0) {
             //Use block being looked at
@@ -72,6 +73,8 @@ public class MineCommands {
             player.sendMessage(phrase("firstPointSet"));
             return;
         }
+        //Args weren't empty or -feet, bad args
+        throw new InvalidCommandArgumentsException();
     }
 
     @Command(aliases = {"pos2", "p2"},
@@ -81,7 +84,7 @@ public class MineCommands {
             usage = "(-feet)",
             permissions = {"mineresetlite.mine.create", "mineresetlite.mine.redefine"},
             min = 0, max = 1, onlyPlayers = true)
-    public void setPoint2(CommandSender sender, String[] args) {
+    public void setPoint2(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
         Player player = (Player) sender;
         if (args.length == 0) {
             //Use block being looked at
@@ -94,6 +97,8 @@ public class MineCommands {
             player.sendMessage(phrase("secondPointSet"));
             return;
         }
+        //Args weren't empty or -feet, bad args
+        throw new InvalidCommandArgumentsException();
     }
 
     @Command(aliases = {"create", "save"},
