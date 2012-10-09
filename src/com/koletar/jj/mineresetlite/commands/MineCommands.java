@@ -287,11 +287,15 @@ public class MineCommands {
         percentage = percentage / 100; //Make it a programmatic percentage
         SerializableBlock block = new SerializableBlock(m.getId(), data);
         Double oldPercentage = mines[0].getComposition().get(block);
-        mines[0].getComposition().put(block, percentage);
         double total = 0;
         for (Map.Entry<SerializableBlock, Double> entry : mines[0].getComposition().entrySet()) {
-            total += entry.getValue().doubleValue();
+            if (!entry.getKey().equals(block)) {
+                total += entry.getValue().doubleValue();
+            } else {
+                block = entry.getKey();
+            }
         }
+        total += percentage;
         if (total > 1) {
             sender.sendMessage(phrase("insaneCompositionChange"));
             if (oldPercentage == null) {
@@ -301,6 +305,7 @@ public class MineCommands {
             }
             return;
         }
+        mines[0].getComposition().put(block, percentage);
         sender.sendMessage(phrase("mineCompositionSet", mines[0], percentage * 100, block));
         plugin.buffSave();
     }
@@ -496,6 +501,7 @@ public class MineCommands {
             return;
         }
         plugin.mines.remove(mines[0]);
+        plugin.buffSave();
         sender.sendMessage(phrase("mineErased", mines[0]));
     }
 }
