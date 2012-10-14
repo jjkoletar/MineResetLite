@@ -165,7 +165,7 @@ public class Mine implements ConfigurationSerializable {
                     double r = rand.nextDouble();
                     for (CompositionEntry ce : probabilityMap) {
                         if (r <= ce.getChance()) {
-                            world.getBlockAt(x, y, z).setTypeIdAndData(ce.getBlock().getBlockId(), ce.getBlock().getData(), true);
+                            world.getBlockAt(x, y, z).setTypeIdAndData(ce.getBlock().getBlockId(), ce.getBlock().getData(), false);
                             break;
                         }
                     }
