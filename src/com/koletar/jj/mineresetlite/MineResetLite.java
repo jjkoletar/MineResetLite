@@ -14,11 +14,8 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.mcstats.Metrics;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,8 +28,6 @@ import java.util.logging.Logger;
 public class MineResetLite extends JavaPlugin {
     public List<Mine> mines;
     private Logger logger;
-    private static final int CONFIG_REVISION = 0;
-    private FileConfiguration config;
     private CommandManager commandManager;
     private WorldEditPlugin worldEdit = null;
     private Metrics metrics = null;
@@ -50,7 +45,6 @@ public class MineResetLite extends JavaPlugin {
             logger.severe("Plugin Loading Aborted!");
             return;
         }
-        config = getConfig();
         commandManager = new CommandManager();
         commandManager.register(MineCommands.class, new MineCommands(this));
         commandManager.register(CommandManager.class, commandManager);
@@ -203,24 +197,6 @@ public class MineResetLite extends JavaPlugin {
         File mineFolder = new File(getDataFolder(), "mines");
         if (!mineFolder.exists() && !mineFolder.mkdir()) {
             logger.severe("Could not make mine folder! Abort! Abort!");
-            return false;
-        }
-        File configFile = new File(getDataFolder(), "config.yml");
-        try {
-            if (!configFile.exists() && !configFile.createNewFile()) {
-                InputStream defaultConfig = getResource("config.yml");
-                if (defaultConfig == null) {
-                    logger.severe("Packaged config.yml not found. Poor building of the jar?");
-                    return false;
-                }
-                OutputStream conf = new FileOutputStream(configFile);
-                IOUtils.copy(defaultConfig, conf);
-                defaultConfig.close();
-                conf.close();
-            }
-        } catch (IOException e) {
-            logger.severe("IOException whilst writing the default config file!");
-            e.printStackTrace();
             return false;
         }
         return true;
