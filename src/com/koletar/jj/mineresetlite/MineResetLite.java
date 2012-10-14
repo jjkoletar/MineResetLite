@@ -3,7 +3,6 @@ package com.koletar.jj.mineresetlite;
 import com.koletar.jj.mineresetlite.commands.MineCommands;
 import com.koletar.jj.mineresetlite.commands.PluginCommands;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import org.apache.commons.io.IOUtils;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
