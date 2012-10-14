@@ -48,7 +48,7 @@ public class Phrases {
         return format;
     }
 
-    private static String findName(Object o) {
+    public static String findName(Object o) {
         if (o instanceof Mine) {
             return ((Mine) o).getName();
         } else if (o instanceof Player) {

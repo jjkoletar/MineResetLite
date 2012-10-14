@@ -5,6 +5,7 @@ import com.koletar.jj.mineresetlite.InvalidCommandArgumentsException;
 import com.koletar.jj.mineresetlite.Mine;
 import com.koletar.jj.mineresetlite.MineResetLite;
 import com.koletar.jj.mineresetlite.SerializableBlock;
+import com.koletar.jj.mineresetlite.StringTools;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.bukkit.selections.Selection;
 import org.bukkit.Location;
@@ -41,16 +42,7 @@ public class MineCommands {
             help = {"List the names of all Mines currently created, across all worlds."},
             min = 0, max = 0, onlyPlayers = false)
     public void listMines(CommandSender sender, String[] args) {
-        StringBuilder response = new StringBuilder();
-        for (Mine mine : plugin.mines) {
-            response.append("&c");
-            response.append(mine.getName());
-            response.append("&d, ");
-        }
-        if (response.length() != 0) {
-            response.delete(response.length() - 2, response.length());
-        }
-        sender.sendMessage(phrase("mineList", response));
+        sender.sendMessage(phrase("mineList", StringTools.buildList(plugin.mines, "&c", "&d, ")));
     }
 
     @Command(aliases = {"pos1", "p1"},
@@ -137,13 +129,7 @@ public class MineCommands {
             return;
         }
         //Construct mine name
-        StringBuilder sb = new StringBuilder();
-        for (String s : args) {
-            sb.append(s);
-            sb.append(" ");
-        }
-        sb.deleteCharAt(sb.length() - 1);
-        String name = sb.toString();
+        String name = StringTools.buildSpacedArgument(args);
         //Verify uniqueness of mine name
         for (Mine mine : plugin.mines) {
             if (mine.getName().equalsIgnoreCase(name)) {
@@ -181,13 +167,7 @@ public class MineCommands {
             permissions = {"mineresetlite.mine.info"},
             min = 1, max = -1, onlyPlayers = false)
     public void mineInfo(CommandSender sender, String[] args) {
-        StringBuilder sb = new StringBuilder();
-        for (String arg : args) {
-            sb.append(arg);
-            sb.append(" ");
-        }
-        sb.deleteCharAt(sb.length() - 1);
-        Mine[] mines = plugin.matchMines(sb.toString());
+        Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
         if (mines.length > 1) {
             sender.sendMessage(phrase("tooManyMines"));
             return;
@@ -215,15 +195,9 @@ public class MineCommands {
         sender.sendMessage(phrase("mineInfoComposition", csb));
         if (mines[0].getResetDelay() != 0) {
             sender.sendMessage(phrase("mineInfoResetDelay", mines[0].getResetDelay()));
-            StringBuilder wsb = new StringBuilder();
-            for (Integer warning : mines[0].getResetWarnings()) {
-                wsb.append(warning);
-                wsb.append(", ");
-            }
-            if (wsb.length() > 2) {
-                wsb.delete(wsb.length() - 2, wsb.length());
-            }
-            sender.sendMessage(phrase("mineInfoWarningTimes", wsb.toString()));
+        }
+        if (mines[0].getResetWarnings().size() > 0) {
+            sender.sendMessage(phrase("mineInfoWarningTimes", StringTools.buildList(mines[0].getResetWarnings(), "", ", ")));
         }
     }
 
@@ -236,13 +210,7 @@ public class MineCommands {
             permissions = {"mineresetlite.mine.composition"},
             min = 3, max = -1, onlyPlayers = false)
     public void setComposition(CommandSender sender, String[] args) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < args.length - 2; i++) {
-            sb.append(args[i]);
-            sb.append(" ");
-        }
-        sb.deleteCharAt(sb.length() - 1);
-        Mine[] mines = plugin.matchMines(sb.toString());
+        Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 2));
         if (mines.length > 1) {
             sender.sendMessage(phrase("tooManyMines"));
             return;
@@ -321,13 +289,7 @@ public class MineCommands {
             permissions = {"mineresetlite.mine.composition"},
             min = 2, max = -1, onlyPlayers = false)
     public void unsetComposition(CommandSender sender, String[] args) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < args.length - 1; i++) {
-            sb.append(args[i]);
-            sb.append(" ");
-        }
-        sb.deleteCharAt(sb.length() - 1);
-        Mine[] mines = plugin.matchMines(sb.toString());
+        Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
         if (mines.length > 1) {
             sender.sendMessage(phrase("tooManyMines"));
             return;
@@ -378,15 +340,7 @@ public class MineCommands {
             permissions = {"mineresetlite.mine.reset"},
             min = 1, max = -1, onlyPlayers = false)
     public void resetMine(CommandSender sender, String[] args) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < args.length; i++) {
-            if (!args[i].equalsIgnoreCase("-s")) {
-                sb.append(args[i]);
-                sb.append(" ");
-            }
-        }
-        sb.deleteCharAt(sb.length() - 1);
-        Mine[] mines = plugin.matchMines(sb.toString());
+        Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
         if (mines.length > 1) {
             sender.sendMessage(phrase("tooManyMines"));
             return;
@@ -412,13 +366,7 @@ public class MineCommands {
             permissions = {"mineresetlite.mine.flag"},
             min = 3, max = -1, onlyPlayers = false)
     public void flag(CommandSender sender, String[] args) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < args.length - 2; i++) {
-            sb.append(args[i]);
-            sb.append(" ");
-        }
-        sb.deleteCharAt(sb.length() - 1);
-        Mine[] mines = plugin.matchMines(sb.toString());
+        Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 2));
         if (mines.length > 1) {
             sender.sendMessage(phrase("tooManyMines"));
             return;
@@ -491,13 +439,7 @@ public class MineCommands {
             permissions = {"mineresetlite.mine.erase"},
             min = 1, max = -1, onlyPlayers = false)
     public void erase(CommandSender sender, String[] args) {
-        StringBuilder sb = new StringBuilder();
-        for (String arg : args) {
-            sb.append(arg);
-            sb.append(" ");
-        }
-        sb.deleteCharAt(sb.length() - 1);
-        Mine[] mines = plugin.matchMines(sb.toString());
+        Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
         if (mines.length > 1) {
             sender.sendMessage(phrase("tooManyMines"));
             return;
