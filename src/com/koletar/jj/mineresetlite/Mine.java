@@ -125,10 +125,6 @@ public class Mine implements ConfigurationSerializable {
         return resetDelay;
     }
 
-    public double getMinutesUntilReset() {
-        return  ((double) (resetTime - world.getFullTime())) / 20;
-    }
-
     public long getResetTime() {
         return resetTime;
     }
