@@ -199,6 +199,9 @@ public class MineCommands {
         if (mines[0].getResetWarnings().size() > 0) {
             sender.sendMessage(phrase("mineInfoWarningTimes", StringTools.buildList(mines[0].getResetWarnings(), "", ", ")));
         }
+        if (mines[0].getSurface() != null) {
+            sender.sendMessage(phrase("mineInfoSurface", mines[0].getSurface()));
+        }
     }
 
     @Command(aliases = {"set", "add", "+"},
@@ -361,7 +364,8 @@ public class MineCommands {
             description = "Set various properties of a mine, including automatic resets",
             help = {"Available flags:",
                     "resetDelay: An integer number of minutes specifying the time between automatic resets. Set to 0 to disable automatic resets.",
-                    "resetWarnings: A comma separated list of integer minutes to warn before the automatic reset. Warnings must be less than the reset delay."},
+                    "resetWarnings: A comma separated list of integer minutes to warn before the automatic reset. Warnings must be less than the reset delay.",
+                    "surface: A block that will cover the entire top surface of the mine when reset, obscuring surface ores. Set surface to air to clear the value."},
             usage = "<mine name> <setting> <value>",
             permissions = {"mineresetlite.mine.flag"},
             min = 3, max = -1, onlyPlayers = false)
@@ -427,6 +431,38 @@ public class MineCommands {
                 return;
             }
             sender.sendMessage(phrase("warningListSet", mines[0]));
+            plugin.buffSave();
+            return;
+        } else if (setting.equalsIgnoreCase("surface")) {
+            //Match material
+            String[] bits = value.split(":");
+            Material m = plugin.matchMaterial(bits[0]);
+            if (m == null) {
+                sender.sendMessage(phrase("unknownBlock"));
+                return;
+            }
+            if (!m.isBlock()) {
+                sender.sendMessage(phrase("notABlock"));
+                return;
+            }
+            byte data = 0;
+            if (bits.length == 2) {
+                try {
+                    data = Byte.valueOf(bits[1]);
+                } catch (NumberFormatException nfe) {
+                    sender.sendMessage(phrase("unknownBlock"));
+                    return;
+                }
+            }
+            if (m.equals(Material.AIR)) {
+                mines[0].setSurface(null);
+                sender.sendMessage(phrase("surfaceBlockCleared", mines[0]));
+                plugin.buffSave();
+                return;
+            }
+            SerializableBlock block = new SerializableBlock(m.getId(), data);
+            mines[0].setSurface(block);
+            sender.sendMessage(phrase("surfaceBlockSet", mines[0]));
             plugin.buffSave();
             return;
         }

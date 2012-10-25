@@ -29,6 +29,7 @@ public class Mine implements ConfigurationSerializable {
     private int resetDelay;
     private List<Integer> resetWarnings;
     private String name;
+    private SerializableBlock surface;
 
     public Mine(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, String name, World world) {
         this.minX = minX;
@@ -80,6 +81,11 @@ public class Mine implements ConfigurationSerializable {
                 throw new IllegalArgumentException("Non-numeric reset warnings supplied");
             }
         }
+        if (me.containsKey("surface")) {
+            if (!me.get("surface").equals("")) {
+                surface = new SerializableBlock((String) me.get("surface"));
+            }
+        }
     }
 
     public Map<String, Object> serialize() {
@@ -105,6 +111,11 @@ public class Mine implements ConfigurationSerializable {
             warnings.add(warning.toString());
         }
         me.put("resetWarnings", warnings);
+        if (surface != null) {
+            me.put("surface", surface.toString());
+        } else {
+            me.put("surface", "");
+        }
         return me;
     }
 
@@ -127,6 +138,14 @@ public class Mine implements ConfigurationSerializable {
 
     public long getResetTime() {
         return resetTime;
+    }
+
+    public SerializableBlock getSurface() {
+        return surface;
+    }
+
+    public void setSurface(SerializableBlock surface) {
+        this.surface = surface;
     }
 
     public World getWorld() {
@@ -158,6 +177,10 @@ public class Mine implements ConfigurationSerializable {
         for (int x = minX; x <= maxX; ++x) {
             for (int y = minY; y <= maxY; ++y) {
                 for (int z = minZ; z <= maxZ; ++z) {
+                    if (y == maxY && surface != null) {
+                        world.getBlockAt(x, y, z).setTypeIdAndData(surface.getBlockId(), surface.getData(), false);
+                        continue;
+                    }
                     double r = rand.nextDouble();
                     for (CompositionEntry ce : probabilityMap) {
                         if (r <= ce.getChance()) {
