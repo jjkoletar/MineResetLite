@@ -9,6 +9,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.mcstats.Metrics;
@@ -16,11 +21,15 @@ import org.mcstats.Metrics;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Logger;
+
+import static com.koletar.jj.mineresetlite.Phrases.phrase;
 
 /**
  * @author jjkoletar
@@ -33,9 +42,27 @@ public class MineResetLite extends JavaPlugin {
     private Metrics metrics = null;
     private int saveTaskId = -1;
     private int resetTaskId = -1;
+    private int updateTaskId = -1;
+    private boolean needsUpdate;
+    private boolean isUpdateCritical;
 
     static {
         ConfigurationSerialization.registerClass(Mine.class);
+    }
+
+    private class UpdateWarner implements Listener {
+        @EventHandler(priority = EventPriority.MONITOR)
+        public void onJoin(PlayerJoinEvent event) {
+            if (event.getPlayer().hasPermission("mineresetlite.updates") && needsUpdate) {
+                event.getPlayer().sendMessage(phrase("updateWarning1"));
+                event.getPlayer().sendMessage(phrase("updateWarning2"));
+                if (isUpdateCritical) {
+                    event.getPlayer().sendMessage(phrase("criticalUpdateWarningDecoration"));
+                    event.getPlayer().sendMessage(phrase("criticalUpdateWarning"));
+                    event.getPlayer().sendMessage(phrase("criticalUpdateWarningDecoration"));
+                }
+            }
+        }
     }
     public void onEnable() {
         mines = new ArrayList<Mine>();
@@ -90,11 +117,39 @@ public class MineResetLite extends JavaPlugin {
                 }
             }
         }, 60 * 20L, 60 * 20L);
+        //Check for updates
+        if (!getDescription().getVersion().contains("dev")) {
+            updateTaskId = getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+                public void run() {
+                    checkUpdates();
+                }
+            }, 20 * 15);
+        }
+        getServer().getPluginManager().registerEvents(new UpdateWarner(), this);
         logger.info("MineResetLite version " + getDescription().getVersion() + " enabled!");
+    }
+
+    private void checkUpdates() {
+        try {
+            URL updateFile = new URL("http://dl.dropbox.com/u/16290839/MineResetLite/update.yml");
+            YamlConfiguration updates = YamlConfiguration.loadConfiguration(updateFile.openStream());
+            int remoteVer = updates.getInt("version");
+            boolean isCritical = updates.getConfigurationSection(String.valueOf(remoteVer)).getBoolean("critical");
+            int localVer = Integer.valueOf(getDescription().getVersion().replace(".", ""));
+            if (remoteVer > localVer) {
+                needsUpdate = true;
+                isUpdateCritical = isCritical;
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     public void onDisable() {
         getServer().getScheduler().cancelTask(resetTaskId);
+        getServer().getScheduler().cancelTask(saveTaskId);
+        getServer().getScheduler().cancelTask(updateTaskId);
+        HandlerList.unregisterAll(this);
         save();
         logger.info("MineResetLite disabled");
     }
