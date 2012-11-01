@@ -1,4 +1,5 @@
 <project name="MineResetLite" default="build">
+    <property name="build.version" value="dev-unversioned"/>
     <target name="build">
         <mkdir dir="build"/>
         <javac srcdir="src" destdir="build" debug="on">
@@ -14,6 +15,7 @@
                 <include name="**/*.properties"/>
             </fileset>
         </copy>
+        <replace file="build/plugin.yml" token="$version$" value="${build.version}"/>
         <jar jarfile="MineResetLite.jar" basedir="build"/>
         <delete dir="build"/>
     </target>
