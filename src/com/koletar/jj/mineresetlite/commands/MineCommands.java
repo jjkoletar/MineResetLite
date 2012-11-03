@@ -202,6 +202,9 @@ public class MineCommands {
         if (mines[0].getSurface() != null) {
             sender.sendMessage(phrase("mineInfoSurface", mines[0].getSurface()));
         }
+        if (mines[0].getFillMode()) {
+            sender.sendMessage(phrase("mineInfoFillMode"));
+        }
     }
 
     @Command(aliases = {"set", "add", "+"},
@@ -365,7 +368,8 @@ public class MineCommands {
             help = {"Available flags:",
                     "resetDelay: An integer number of minutes specifying the time between automatic resets. Set to 0 to disable automatic resets.",
                     "resetWarnings: A comma separated list of integer minutes to warn before the automatic reset. Warnings must be less than the reset delay.",
-                    "surface: A block that will cover the entire top surface of the mine when reset, obscuring surface ores. Set surface to air to clear the value."},
+                    "surface: A block that will cover the entire top surface of the mine when reset, obscuring surface ores. Set surface to air to clear the value.",
+                    "fillMode: An alternate reset algorithm that will only \"reset\" air blocks inside your mine. Set to true or false."},
             usage = "<mine name> <setting> <value>",
             permissions = {"mineresetlite.mine.flag"},
             min = 3, max = -1, onlyPlayers = false)
@@ -465,6 +469,20 @@ public class MineCommands {
             sender.sendMessage(phrase("surfaceBlockSet", mines[0]));
             plugin.buffSave();
             return;
+        } else if (setting.equalsIgnoreCase("fill") || setting.equalsIgnoreCase("fillMode")) {
+            //Match true or false
+            if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("enabled")) {
+                mines[0].setFillMode(true);
+                sender.sendMessage(phrase("fillModeEnabled"));
+                plugin.buffSave();
+                return;
+            } else if (value.equalsIgnoreCase("false") || value.equalsIgnoreCase("no") || value.equalsIgnoreCase("disabled")) {
+                mines[0].setFillMode(false);
+                sender.sendMessage(phrase("fillModeDisabled"));
+                plugin.buffSave();
+                return;
+            }
+            sender.sendMessage(phrase("invalidFillMode"));
         }
         sender.sendMessage(phrase("unknownFlag"));
     }

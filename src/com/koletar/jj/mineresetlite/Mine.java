@@ -30,6 +30,7 @@ public class Mine implements ConfigurationSerializable {
     private List<Integer> resetWarnings;
     private String name;
     private SerializableBlock surface;
+    private boolean fillMode;
 
     public Mine(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, String name, World world) {
         this.minX = minX;
@@ -86,6 +87,9 @@ public class Mine implements ConfigurationSerializable {
                 surface = new SerializableBlock((String) me.get("surface"));
             }
         }
+        if (me.containsKey("fillMode")) {
+            fillMode = (Boolean) me.get("fillMode");
+        }
     }
 
     public Map<String, Object> serialize() {
@@ -116,7 +120,16 @@ public class Mine implements ConfigurationSerializable {
         } else {
             me.put("surface", "");
         }
+        me.put("fillMode", fillMode);
         return me;
+    }
+
+    public boolean getFillMode() {
+        return fillMode;
+    }
+
+    public void setFillMode(boolean fillMode) {
+        this.fillMode = fillMode;
     }
 
     public void setResetDelay(int minutes) {
@@ -177,15 +190,17 @@ public class Mine implements ConfigurationSerializable {
         for (int x = minX; x <= maxX; ++x) {
             for (int y = minY; y <= maxY; ++y) {
                 for (int z = minZ; z <= maxZ; ++z) {
-                    if (y == maxY && surface != null) {
-                        world.getBlockAt(x, y, z).setTypeIdAndData(surface.getBlockId(), surface.getData(), false);
-                        continue;
-                    }
-                    double r = rand.nextDouble();
-                    for (CompositionEntry ce : probabilityMap) {
-                        if (r <= ce.getChance()) {
-                            world.getBlockAt(x, y, z).setTypeIdAndData(ce.getBlock().getBlockId(), ce.getBlock().getData(), false);
-                            break;
+                    if (!fillMode || world.getBlockTypeIdAt(x, y, z) == 0) {
+                        if (y == maxY && surface != null) {
+                            world.getBlockAt(x, y, z).setTypeIdAndData(surface.getBlockId(), surface.getData(), false);
+                            continue;
+                        }
+                        double r = rand.nextDouble();
+                        for (CompositionEntry ce : probabilityMap) {
+                            if (r <= ce.getChance()) {
+                                world.getBlockAt(x, y, z).setTypeIdAndData(ce.getBlock().getBlockId(), ce.getBlock().getData(), false);
+                                break;
+                            }
                         }
                     }
                 }
