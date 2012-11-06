@@ -50,6 +50,12 @@ public class MineResetLite extends JavaPlugin {
         ConfigurationSerialization.registerClass(Mine.class);
     }
 
+    private static class IsMineFile implements FilenameFilter {
+        public boolean accept(File file, String s) {
+            return s.contains(".mine.yml");
+        }
+    }
+
     private class UpdateWarner implements Listener {
         @EventHandler(priority = EventPriority.MONITOR)
         public void onJoin(PlayerJoinEvent event) {
@@ -91,11 +97,7 @@ public class MineResetLite extends JavaPlugin {
             e.printStackTrace();
         }
         //Load mines
-        File[] mineFiles = new File(getDataFolder(), "mines").listFiles(new FilenameFilter() {
-            public boolean accept(File file, String s) {
-                return s.contains(".mine.yml");
-            }
-        });
+        File[] mineFiles = new File(getDataFolder(), "mines").listFiles(new IsMineFile());
         for (File file : mineFiles) {
             FileConfiguration fileConf = YamlConfiguration.loadConfiguration(file);
             try {
@@ -218,8 +220,10 @@ public class MineResetLite extends JavaPlugin {
     }
 
     public void save() {
+        List<File> filesSeen = new LinkedList<File>();
         for (Mine mine : mines) {
             File mineFile = getMineFile(mine);
+            filesSeen.add(mineFile);
             FileConfiguration mineConf = YamlConfiguration.loadConfiguration(mineFile);
             mineConf.set("mine", mine);
             try {
@@ -227,6 +231,12 @@ public class MineResetLite extends JavaPlugin {
             } catch (IOException e) {
                 logger.severe("Unable to serialize mine!");
                 e.printStackTrace();
+            }
+        }
+        //Clear out old files
+        for (File file : new File(getDataFolder(), "mines").listFiles(new IsMineFile())) {
+            if (!filesSeen.contains(file)) {
+                file.delete();
             }
         }
     }
