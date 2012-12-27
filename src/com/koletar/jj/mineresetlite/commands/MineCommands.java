@@ -131,11 +131,10 @@ public class MineCommands {
         //Construct mine name
         String name = StringTools.buildSpacedArgument(args);
         //Verify uniqueness of mine name
-        for (Mine mine : plugin.mines) {
-            if (mine.getName().equalsIgnoreCase(name)) {
-                player.sendMessage(phrase("nameInUse", name));
-                return;
-            }
+        Mine[] mines = plugin.matchMines(name);
+        if (mines.length > 0) {
+            player.sendMessage(phrase("nameInUse", name));
+            return;
         }
         //Sort coordinates
         if (p1.getX() > p2.getX()) {
