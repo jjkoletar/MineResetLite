@@ -504,4 +504,17 @@ public class MineCommands {
         plugin.buffSave();
         sender.sendMessage(phrase("mineErased", mines[0]));
     }
+    @Command(aliases = {"reschedule"},
+            description = "Synchronize all automatic mine resets",
+            help = {"This command will set the 'start time' of the mine resets to the same point."},
+            usage = "",
+            permissions = {"mineresetlite.mine.flag"},
+            min = 0, max = 0, onlyPlayers = false)
+    public void reschedule(CommandSender sender, String[] args) {
+        for (Mine mine : plugin.mines) {
+            mine.setResetDelay(mine.getResetDelay());
+        }
+        plugin.buffSave();
+        sender.sendMessage(phrase("rescheduled"));
+    }
 }
