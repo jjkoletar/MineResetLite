@@ -186,7 +186,7 @@ public class Mine implements ConfigurationSerializable {
             }
         }
         //Actually reset
-        Random rand = new Random(world.getTime());
+        Random rand = new Random();
         for (int x = minX; x <= maxX; ++x) {
             for (int y = minY; y <= maxY; ++y) {
                 for (int z = minZ; z <= maxZ; ++z) {
