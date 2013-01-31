@@ -25,12 +25,12 @@ public class Mine implements ConfigurationSerializable {
     private int maxZ;
     private World world;
     private Map<SerializableBlock, Double> composition;
-    private long resetTime;
     private int resetDelay;
     private List<Integer> resetWarnings;
     private String name;
     private SerializableBlock surface;
     private boolean fillMode;
+    private int resetClock;
 
     public Mine(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, String name, World world) {
         this.minX = minX;
@@ -71,7 +71,6 @@ public class Mine implements ConfigurationSerializable {
             throw new IllegalArgumentException("Error deserializing composition");
         }
         name = (String) me.get("name");
-        resetTime = Long.valueOf(me.get("resetTime").toString());
         resetDelay = (Integer) me.get("resetDelay");
         List<String> warnings = (List<String>) me.get("resetWarnings");
         resetWarnings = new LinkedList<Integer>();
@@ -89,6 +88,13 @@ public class Mine implements ConfigurationSerializable {
         }
         if (me.containsKey("fillMode")) {
             fillMode = (Boolean) me.get("fillMode");
+        }
+        if (me.containsKey("resetClock")) {
+            resetClock = (Integer) me.get("resetClock");
+        }
+        //Compat for the clock
+        if (resetDelay > 0 && resetClock == 0) {
+            resetClock = resetDelay;
         }
     }
 
@@ -108,7 +114,6 @@ public class Mine implements ConfigurationSerializable {
         }
         me.put("composition", sComposition);
         me.put("name", name);
-        me.put("resetTime", resetTime);
         me.put("resetDelay", resetDelay);
         List<String> warnings = new LinkedList<String>();
         for (Integer warning : resetWarnings) {
@@ -121,6 +126,7 @@ public class Mine implements ConfigurationSerializable {
             me.put("surface", "");
         }
         me.put("fillMode", fillMode);
+        me.put("resetClock", resetClock);
         return me;
     }
 
@@ -134,7 +140,7 @@ public class Mine implements ConfigurationSerializable {
 
     public void setResetDelay(int minutes) {
         resetDelay = minutes;
-        resetTime = world.getFullTime() + (resetDelay * 60L * 20L);
+        resetClock = minutes;
     }
 
     public void setResetWarnings(List<Integer> warnings) {
@@ -150,7 +156,7 @@ public class Mine implements ConfigurationSerializable {
     }
 
     public long getResetTime() {
-        return resetTime;
+        return resetClock;
     }
 
     public SerializableBlock getSurface() {
@@ -212,15 +218,17 @@ public class Mine implements ConfigurationSerializable {
         if (resetDelay == 0) {
             return;
         }
-        long worldTime = world.getFullTime();
-        if (worldTime >= resetTime) {
-            reset();
-            resetTime = world.getFullTime() + (resetDelay * 60L * 20L);
-            Bukkit.getServer().broadcastMessage(Phrases.phrase("mineAutoResetBroadcast", this));
+        if (resetClock > 0) {
+            resetClock--; //Tick down to the reset
         }
-        int minutesUntilReset = (int) ((resetTime - worldTime) / (60 * 20));
+        if (resetClock == 0) {
+            reset();
+            resetClock = resetDelay;
+            Bukkit.getServer().broadcastMessage(Phrases.phrase("mineAutoResetBroadcast", this));
+            return;
+        }
         for (Integer warning : resetWarnings) {
-            if (warning == minutesUntilReset) {
+            if (warning == resetClock) {
                 Bukkit.getServer().broadcastMessage(Phrases.phrase("mineWarningBroadcast", this, warning));
             }
         }
