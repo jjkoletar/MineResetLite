@@ -129,6 +129,7 @@ public class MineResetLite extends JavaPlugin {
         }
         getServer().getPluginManager().registerEvents(new UpdateWarner(), this);
         logger.info("MineResetLite version " + getDescription().getVersion() + " enabled!");
+        logger.info("=-= MineResetLite wouldn't be possible without the support of Don't Drop the Soap, MCPrison.com =-=");
     }
 
     private void checkUpdates() {
