@@ -19,6 +19,7 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.mcstats.Metrics;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
@@ -84,6 +85,16 @@ public class MineResetLite extends JavaPlugin {
         commandManager.register(PluginCommands.class, new PluginCommands(this));
         Locale locale = Locale.ENGLISH;
         Phrases.getInstance().initialize(locale);
+        File overrides = new File(getDataFolder(), "phrases.properties");
+        if (overrides.exists()) {
+            Properties overridesProps = new Properties();
+            try {
+                overridesProps.load(new FileInputStream(overrides));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Phrases.getInstance().overrides(overridesProps);
+        }
         //Look for worldedit
         if (getServer().getPluginManager().isPluginEnabled("WorldEdit")) {
             worldEdit = (WorldEditPlugin) getServer().getPluginManager().getPlugin("WorldEdit");

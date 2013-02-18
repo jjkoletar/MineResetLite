@@ -6,6 +6,7 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Locale;
+import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
@@ -15,6 +16,7 @@ import java.util.logging.Logger;
 public class Phrases {
     private static Phrases instance;
     private ResourceBundle phrases;
+    private Properties overrides;
 
     private Phrases() {}
 
@@ -29,6 +31,10 @@ public class Phrases {
         phrases = ResourceBundle.getBundle("phrases", l);
     }
 
+    public void overrides(Properties overrides) {
+        this.overrides = overrides;
+    }
+
     public static String phrase(String key, Object... replacements) {
         if (getInstance() == null) {
             return "";
@@ -40,7 +46,12 @@ public class Phrases {
             Logger.getLogger("Minecraft").warning("[MineResetLite] Unknown phrase key! '" + key + "'");
             return "";
         }
-        String format = getInstance().phrases.getString(key);
+        String format;
+        if (getInstance().overrides != null && getInstance().overrides.containsKey(key)) {
+            format = getInstance().overrides.getProperty(key);
+        } else {
+            format = getInstance().phrases.getString(key);
+        }
         for (int i = 0; i < replacements.length; i++) {
             format = format.replace("%" + i + "%", findName(replacements[i]));
         }
