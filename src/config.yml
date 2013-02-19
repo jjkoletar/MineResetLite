@@ -1,4 +1,2 @@
-
-
-# Don't mess with this value! It makes sure your configs don't break the plugin!
-configRev: 0
+#Set this value to false to disable the checking of updates
+check-for-updates: true

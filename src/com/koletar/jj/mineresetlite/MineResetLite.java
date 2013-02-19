@@ -141,6 +141,9 @@ public class MineResetLite extends JavaPlugin {
 
     private void checkUpdates() {
         try {
+            if (!getConfig().getBoolean("check-for-updates")) {
+                return;
+            }
             URL updateFile = new URL("http://dl.dropbox.com/u/16290839/MineResetLite/update.yml");
             YamlConfiguration updates = YamlConfiguration.loadConfiguration(updateFile.openStream());
             int remoteVer = updates.getInt("version");
