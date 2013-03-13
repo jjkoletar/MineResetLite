@@ -345,7 +345,7 @@ public class MineCommands {
             permissions = {"mineresetlite.mine.reset"},
             min = 1, max = -1, onlyPlayers = false)
     public void resetMine(CommandSender sender, String[] args) {
-        Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
+        Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args).replace(" -s", ""));
         if (mines.length > 1) {
             sender.sendMessage(phrase("tooManyMines"));
             return;
