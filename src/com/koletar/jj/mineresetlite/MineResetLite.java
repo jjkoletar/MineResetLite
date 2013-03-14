@@ -141,7 +141,7 @@ public class MineResetLite extends JavaPlugin {
 
     private void checkUpdates() {
         try {
-            if (!getConfig().getBoolean("check-for-updates")) {
+            if (!Config.getCheckForUpdates()) {
                 return;
             }
             URL updateFile = new URL("http://dl.dropbox.com/u/16290839/MineResetLite/update.yml");
@@ -273,6 +273,13 @@ public class MineResetLite extends JavaPlugin {
         File mineFolder = new File(getDataFolder(), "mines");
         if (!mineFolder.exists() && !mineFolder.mkdir()) {
             logger.severe("Could not make mine folder! Abort! Abort!");
+            return false;
+        }
+        try {
+            Config.initConfig(getDataFolder());
+        } catch (IOException e) {
+            logger.severe("Could not make config file!");
+            e.printStackTrace();
             return false;
         }
         return true;
