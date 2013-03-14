@@ -224,12 +224,12 @@ public class Mine implements ConfigurationSerializable {
         if (resetClock == 0) {
             reset();
             resetClock = resetDelay;
-            Bukkit.getServer().broadcastMessage(Phrases.phrase("mineAutoResetBroadcast", this));
+            MineResetLite.broadcast(Phrases.phrase("mineAutoResetBroadcast", this), world);
             return;
         }
         for (Integer warning : resetWarnings) {
             if (warning == resetClock) {
-                Bukkit.getServer().broadcastMessage(Phrases.phrase("mineWarningBroadcast", this, warning));
+                MineResetLite.broadcast(Phrases.phrase("mineWarningBroadcast", this, warning), world);
             }
         }
     }

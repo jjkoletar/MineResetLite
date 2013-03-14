@@ -3,12 +3,15 @@ package com.koletar.jj.mineresetlite;
 import com.koletar.jj.mineresetlite.commands.MineCommands;
 import com.koletar.jj.mineresetlite.commands.PluginCommands;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -301,5 +304,16 @@ public class MineResetLite extends JavaPlugin {
             return true;
         }
         return false; //Fallthrough
+    }
+
+    public static void broadcast(String message, World world) {
+        if (Config.getBroadcastInWorldOnly()) {
+            for (Player p : world.getPlayers()) {
+                p.sendMessage(message);
+            }
+            Bukkit.getLogger().info(message);
+        } else {
+            Bukkit.getServer().broadcastMessage(message);
+        }
     }
 }

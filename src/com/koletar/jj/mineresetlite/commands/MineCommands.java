@@ -358,7 +358,7 @@ public class MineCommands {
             mines[0].reset();
         } else {
             mines[0].reset();
-            plugin.getServer().broadcastMessage(phrase("mineResetBroadcast", mines[0], sender));
+            MineResetLite.broadcast(phrase("mineResetBroadcast", mines[0], sender), mines[0].getWorld());
         }
     }
 
