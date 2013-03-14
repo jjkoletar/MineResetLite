@@ -82,7 +82,7 @@ public class MineResetLite extends JavaPlugin {
         commandManager.register(MineCommands.class, new MineCommands(this));
         commandManager.register(CommandManager.class, commandManager);
         commandManager.register(PluginCommands.class, new PluginCommands(this));
-        Locale locale = Locale.ENGLISH;
+        Locale locale = new Locale(Config.getLocale());
         Phrases.getInstance().initialize(locale);
         File overrides = new File(getDataFolder(), "phrases.properties");
         if (overrides.exists()) {

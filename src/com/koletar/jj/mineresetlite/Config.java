@@ -14,6 +14,7 @@ public class Config {
     private Config() {}
     private static boolean broadcastInWorldOnly = false;
     private static boolean checkForUpdates = true;
+    private static String locale = "en";
 
     public static boolean getBroadcastInWorldOnly() {
         return broadcastInWorldOnly;
@@ -49,6 +50,27 @@ public class Config {
         out.newLine();
     }
 
+    public static String getLocale() {
+        return locale;
+    }
+
+    protected static void setLocale(String locale) {
+        Config.locale = locale;
+    }
+
+    public static void writeLocale(BufferedWriter out) throws IOException {
+        out.write("# MineResetLite supports multiple languages. Indicate the language to be used here.");
+        out.newLine();
+        out.write("# Languages available at the time this config was generated: Danish (thanks Beijiru), Spanish (thanks enetocs)");
+        out.newLine();
+        out.write("# Use the following values for these languages: English: 'en', Danish: 'da', Spanish: 'es'");
+        out.newLine();
+        out.write("# A fully up-to-date list of languages is available at http://dev.bukkit.org/server-mods/mineresetlite/pages/internationalization/");
+        out.newLine();
+        out.write("locale: en");
+        out.newLine();
+    }
+
     public static void initConfig(File dataFolder) throws IOException {
         if (!dataFolder.exists()) {
             dataFolder.mkdir();
@@ -61,6 +83,7 @@ public class Config {
             out.newLine();
             Config.writeBroadcastInWorldOnly(out);
             Config.writeCheckForUpdates(out);
+            Config.writeLocale(out);
             out.close();
         }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
@@ -74,6 +97,11 @@ public class Config {
             Config.setCheckForUpdates(config.getBoolean("check-for-updates"));
         } else {
             Config.writeCheckForUpdates(out);
+        }
+        if (config.contains("locale")) {
+            Config.setLocale(config.getString("locale"));
+        } else {
+            Config.writeLocale(out);
         }
         out.close();
     }
