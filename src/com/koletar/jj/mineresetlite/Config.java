@@ -19,7 +19,7 @@ public class Config {
         return broadcastInWorldOnly;
     }
 
-    protected static void setBroadcastInWorldOnly(boolean broadcastInWorldOnly) {
+    private static void setBroadcastInWorldOnly(boolean broadcastInWorldOnly) {
         Config.broadcastInWorldOnly = broadcastInWorldOnly;
     }
 
@@ -36,7 +36,7 @@ public class Config {
         return checkForUpdates;
     }
 
-    protected static void setCheckForUpdates(boolean checkForUpdates) {
+    private static void setCheckForUpdates(boolean checkForUpdates) {
         Config.checkForUpdates = checkForUpdates;
     }
 
