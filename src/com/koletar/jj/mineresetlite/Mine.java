@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Logger;
 
 /**
  * @author jjkoletar
@@ -60,6 +61,13 @@ public class Mine implements ConfigurationSerializable {
             world = Bukkit.getServer().getWorld((String) me.get("world"));
         } catch (Throwable t) {
             throw new IllegalArgumentException("Error finding world");
+        }
+        if (world == null) {
+            Logger l = Bukkit.getLogger();
+            l.severe("[MineResetLite] Unable to find a world! Please include these logger lines along with the stack trace when reporting this bug!");
+            l.severe("[MineResetLite] Attempted to load world named: " + me.get("world"));
+            l.severe("[MineResetLite] Worlds listed: " + StringTools.buildList(Bukkit.getWorlds(), "", ", "));
+            throw new IllegalArgumentException("World was null!");
         }
         try {
             Map<String, Double> sComposition = (Map<String, Double>) me.get("composition");
