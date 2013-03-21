@@ -19,7 +19,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
-import org.mcstats.Metrics;
+import com.koletar.jj.mineresetlite.org.mcstats.Metrics;
 
 import java.io.File;
 import java.io.FileInputStream;
