@@ -3,7 +3,7 @@ version: $version$
 main: com.koletar.jj.mineresetlite.MineResetLite
 author: jjkoletar
 description: A lightweight solution for Mine management.
-softdepend: [WorldEdit]
+softdepend: [WorldEdit, Multiverse-Core]
 commands:
   mineresetlite:
     aliases: [mrl, mr, mine, minereset]
