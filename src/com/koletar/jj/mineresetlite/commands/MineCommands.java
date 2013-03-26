@@ -500,8 +500,7 @@ public class MineCommands {
             sender.sendMessage(phrase("noMinesMatched"));
             return;
         }
-        plugin.mines.remove(mines[0]);
-        plugin.buffSave();
+        plugin.eraseMine(mines[0]);
         sender.sendMessage(phrase("mineErased", mines[0]));
     }
     @Command(aliases = {"reschedule"},

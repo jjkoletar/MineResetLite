@@ -113,6 +113,7 @@ public class MineResetLite extends JavaPlugin {
         //Load mines
         File[] mineFiles = new File(getDataFolder(), "mines").listFiles(new IsMineFile());
         for (File file : mineFiles) {
+            logger.info("Loading mine from file '" + file.getName() + "'...");
             FileConfiguration fileConf = YamlConfiguration.loadConfiguration(file);
             try {
                 Object o = fileConf.get("mine");
@@ -238,10 +239,8 @@ public class MineResetLite extends JavaPlugin {
     }
 
     public void save() {
-        List<File> filesSeen = new LinkedList<File>();
         for (Mine mine : mines) {
             File mineFile = getMineFile(mine);
-            filesSeen.add(mineFile);
             FileConfiguration mineConf = YamlConfiguration.loadConfiguration(mineFile);
             mineConf.set("mine", mine);
             try {
@@ -251,16 +250,15 @@ public class MineResetLite extends JavaPlugin {
                 e.printStackTrace();
             }
         }
-        //Clear out old files
-        for (File file : new File(getDataFolder(), "mines").listFiles(new IsMineFile())) {
-            if (!filesSeen.contains(file)) {
-                file.delete();
-            }
-        }
     }
 
     private File getMineFile(Mine mine) {
         return new File(new File(getDataFolder(), "mines"), mine.getName().replace(" ", "") + ".mine.yml");
+    }
+
+    public void eraseMine(Mine mine) {
+        mines.remove(mine);
+        getMineFile(mine).delete();
     }
 
     public boolean hasWorldEdit() {
