@@ -168,7 +168,13 @@ public class Mine implements ConfigurationSerializable {
         return resetDelay;
     }
 
-    public long getResetTime() {
+    /**
+     * Return the length of time until the next automatic reset.
+     * The actual length of time is anywhere between n and n-1 minutes.
+     *
+     * @return clock ticks left until reset
+     */
+    public int getTimeUntilReset() {
         return resetClock;
     }
 
