@@ -194,7 +194,9 @@ public class MineCommands {
         sender.sendMessage(phrase("mineInfoComposition", csb));
         if (mines[0].getResetDelay() != 0) {
             sender.sendMessage(phrase("mineInfoResetDelay", mines[0].getResetDelay()));
+            sender.sendMessage(phrase("mineInfoTimeUntilReset", mines[0].getTimeUntilReset()));
         }
+        sender.sendMessage(phrase("mineInfoSilence", mines[0].isSilent()));
         if (mines[0].getResetWarnings().size() > 0) {
             sender.sendMessage(phrase("mineInfoWarningTimes", StringTools.buildList(mines[0].getResetWarnings(), "", ", ")));
         }
@@ -368,7 +370,8 @@ public class MineCommands {
                     "resetDelay: An integer number of minutes specifying the time between automatic resets. Set to 0 to disable automatic resets.",
                     "resetWarnings: A comma separated list of integer minutes to warn before the automatic reset. Warnings must be less than the reset delay.",
                     "surface: A block that will cover the entire top surface of the mine when reset, obscuring surface ores. Set surface to air to clear the value.",
-                    "fillMode: An alternate reset algorithm that will only \"reset\" air blocks inside your mine. Set to true or false."},
+                    "fillMode: An alternate reset algorithm that will only \"reset\" air blocks inside your mine. Set to true or false.",
+                    "isSilent: A boolean (true or false) of whether or not this mine should broadcast a reset notification when it is reset *automatically*"},
             usage = "<mine name> <setting> <value>",
             permissions = {"mineresetlite.mine.flag"},
             min = 3, max = -1, onlyPlayers = false)
@@ -482,6 +485,19 @@ public class MineCommands {
                 return;
             }
             sender.sendMessage(phrase("invalidFillMode"));
+        } else if (setting.equalsIgnoreCase("isSilent") || setting.equalsIgnoreCase("silent") || setting.equalsIgnoreCase("silence")) {
+            if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("enabled")) {
+                mines[0].setSilence(true);
+                sender.sendMessage(phrase("mineIsNowSilent", mines[0]));
+                plugin.buffSave();
+                return;
+            } else if (value.equalsIgnoreCase("false") || value.equalsIgnoreCase("no") || value.equalsIgnoreCase("disabled")) {
+                mines[0].setSilence(false);
+                sender.sendMessage(phrase("mineIsNoLongerSilent", mines[0]));
+                plugin.buffSave();
+                return;
+            }
+            sender.sendMessage(phrase("badBoolean"));
         }
         sender.sendMessage(phrase("unknownFlag"));
     }

@@ -32,6 +32,7 @@ public class Mine implements ConfigurationSerializable {
     private SerializableBlock surface;
     private boolean fillMode;
     private int resetClock;
+    private boolean isSilent;
 
     public Mine(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, String name, World world) {
         this.minX = minX;
@@ -104,6 +105,9 @@ public class Mine implements ConfigurationSerializable {
         if (resetDelay > 0 && resetClock == 0) {
             resetClock = resetDelay;
         }
+        if (me.containsKey("isSilent")) {
+            isSilent = (Boolean) me.get("isSilent");
+        }
     }
 
     public Map<String, Object> serialize() {
@@ -135,6 +139,7 @@ public class Mine implements ConfigurationSerializable {
         }
         me.put("fillMode", fillMode);
         me.put("resetClock", resetClock);
+        me.put("isSilent", isSilent);
         return me;
     }
 
@@ -187,6 +192,14 @@ public class Mine implements ConfigurationSerializable {
         return composition;
     }
 
+    public boolean isSilent() {
+        return isSilent;
+    }
+
+    public void setSilence(boolean isSilent) {
+        this.isSilent = isSilent;
+    }
+
     public void reset() {
         //Get probability map
         List<CompositionEntry> probabilityMap = mapComposition(composition);
@@ -232,7 +245,9 @@ public class Mine implements ConfigurationSerializable {
         if (resetClock == 0) {
             reset();
             resetClock = resetDelay;
-            MineResetLite.broadcast(Phrases.phrase("mineAutoResetBroadcast", this), world);
+            if (!isSilent) {
+                MineResetLite.broadcast(Phrases.phrase("mineAutoResetBroadcast", this), world);
+            }
             return;
         }
         for (Integer warning : resetWarnings) {
