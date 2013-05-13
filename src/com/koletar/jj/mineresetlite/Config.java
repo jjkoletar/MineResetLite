@@ -61,9 +61,9 @@ public class Config {
     public static void writeLocale(BufferedWriter out) throws IOException {
         out.write("# MineResetLite supports multiple languages. Indicate the language to be used here.");
         out.newLine();
-        out.write("# Languages available at the time this config was generated: Danish (thanks Beijiru), Spanish (thanks enetocs)");
+        out.write("# Languages available at the time this config was generated: Danish (thanks Beijiru), Spanish (thanks enetocs), Portuguese (thanks FelipeMarques14), Italian (thanks JoLong)");
         out.newLine();
-        out.write("# Use the following values for these languages: English: 'en', Danish: 'da', Spanish: 'es'");
+        out.write("# Use the following values for these languages: English: 'en', Danish: 'da', Spanish: 'es', Portuguese: 'pt', Italian: 'it'");
         out.newLine();
         out.write("# A fully up-to-date list of languages is available at http://dev.bukkit.org/server-mods/mineresetlite/pages/internationalization/");
         out.newLine();
