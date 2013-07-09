@@ -308,9 +308,16 @@ public class MineResetLite extends JavaPlugin {
         return false; //Fallthrough
     }
 
-    public static void broadcast(String message, World world) {
-        if (Config.getBroadcastInWorldOnly()) {
-            for (Player p : world.getPlayers()) {
+    public static void broadcast(String message, Mine mine) {
+        if (Config.getBroadcastNearbyOnly()) {
+            for (Player p : mine.getWorld().getPlayers()) {
+                if (mine.isInside(p)) {
+                    p.sendMessage(message);
+                }
+            }
+            Bukkit.getLogger().info(message);
+        } else if (Config.getBroadcastInWorldOnly()) {
+            for (Player p : mine.getWorld().getPlayers()) {
                 p.sendMessage(message);
             }
             Bukkit.getLogger().info(message);

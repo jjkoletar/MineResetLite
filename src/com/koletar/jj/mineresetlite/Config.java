@@ -13,6 +13,7 @@ import java.io.IOException;
 public class Config {
     private Config() {}
     private static boolean broadcastInWorldOnly = false;
+    private static boolean broadcastNearbyOnly = false;
     private static boolean checkForUpdates = true;
     private static String locale = "en";
 
@@ -20,8 +21,16 @@ public class Config {
         return broadcastInWorldOnly;
     }
 
+    public static boolean getBroadcastNearbyOnly() {
+        return broadcastNearbyOnly;
+    }
+
     private static void setBroadcastInWorldOnly(boolean broadcastInWorldOnly) {
         Config.broadcastInWorldOnly = broadcastInWorldOnly;
+    }
+
+    private static void setBroadcastNearbyOnly(boolean broadcastNearbyOnly) {
+        Config.broadcastNearbyOnly = broadcastNearbyOnly;
     }
 
     public static void writeBroadcastInWorldOnly(BufferedWriter out) throws IOException {
@@ -30,6 +39,15 @@ public class Config {
         out.write("# reset notifications, and automatic reset warnings, set this to true.");
         out.newLine();
         out.write("broadcast-in-world-only: false");
+        out.newLine();
+    }
+
+    public static void writeBroadcastNearbyOnly(BufferedWriter out) throws IOException {
+        out.write("# If you only want players nearby the mines to recieive reset notifications,");
+        out.newLine();
+        out.write("# and automatic reset warnings, set this to true.");
+        out.newLine();
+        out.write("broadcast-nearby-only: false");
         out.newLine();
     }
 
@@ -92,6 +110,11 @@ public class Config {
             Config.setBroadcastInWorldOnly(config.getBoolean("broadcast-in-world-only"));
         } else {
             Config.writeBroadcastInWorldOnly(out);
+        }
+        if (config.contains("broadcast-nearby-only")) {
+            Config.setBroadcastNearbyOnly(config.getBoolean("broadcast-nearby-only"));
+        } else {
+            Config.writeBroadcastNearbyOnly(out);
         }
         if (config.contains("check-for-updates")) {
             Config.setCheckForUpdates(config.getBoolean("check-for-updates"));

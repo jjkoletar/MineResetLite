@@ -359,8 +359,8 @@ public class MineCommands {
             //Silent reset
             mines[0].reset();
         } else {
+            MineResetLite.broadcast(phrase("mineResetBroadcast", mines[0], sender), mines[0]);
             mines[0].reset();
-            MineResetLite.broadcast(phrase("mineResetBroadcast", mines[0], sender), mines[0].getWorld());
         }
     }
 

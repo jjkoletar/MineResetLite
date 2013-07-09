@@ -206,15 +206,20 @@ public class Mine implements ConfigurationSerializable {
         this.isSilent = isSilent;
     }
 
+    public boolean isInside(Player p) {
+        Location l = p.getLocation();
+        return (l.getX() >= minX && l.getX() <= maxX)
+            && (l.getY() >= minY && l.getY() <= maxY)
+            && (l.getZ() >= minZ && l.getZ() <= maxZ);
+    }
+
     public void reset() {
         //Get probability map
         List<CompositionEntry> probabilityMap = mapComposition(composition);
         //Pull players out
         for (Player p : Bukkit.getServer().getOnlinePlayers()) {
             Location l = p.getLocation();
-            if ((l.getX() >= minX && l.getX() <= maxX)
-                    && (l.getY() >= minY && l.getY() <= maxY)
-                    && (l.getZ() >= minZ && l.getZ() <= maxZ)) {
+            if (isInside(p)) {
                 p.teleport(new Location(world, l.getX(), maxY + 2D, l.getZ()));
             }
         }
@@ -249,16 +254,16 @@ public class Mine implements ConfigurationSerializable {
             resetClock--; //Tick down to the reset
         }
         if (resetClock == 0) {
+            if (!isSilent) {
+                MineResetLite.broadcast(Phrases.phrase("mineAutoResetBroadcast", this), this);
+            }
             reset();
             resetClock = resetDelay;
-            if (!isSilent) {
-                MineResetLite.broadcast(Phrases.phrase("mineAutoResetBroadcast", this), world);
-            }
             return;
         }
         for (Integer warning : resetWarnings) {
             if (warning == resetClock) {
-                MineResetLite.broadcast(Phrases.phrase("mineWarningBroadcast", this, warning), world);
+                MineResetLite.broadcast(Phrases.phrase("mineWarningBroadcast", this, warning), this);
             }
         }
     }
