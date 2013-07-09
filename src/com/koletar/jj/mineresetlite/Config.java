@@ -43,9 +43,9 @@ public class Config {
     }
 
     public static void writeBroadcastNearbyOnly(BufferedWriter out) throws IOException {
-        out.write("# If you only want players nearby the mines to recieive reset notifications,");
+        out.write("# If you only want players nearby the mines to receive reset notifications,");
         out.newLine();
-        out.write("# and automatic reset warnings, set this to true.");
+        out.write("# and automatic reset warnings, set this to true. Note: Currently only broadcasts to players in the mine");
         out.newLine();
         out.write("broadcast-nearby-only: false");
         out.newLine();
@@ -100,6 +100,7 @@ public class Config {
             out.write("# MineResetLite Configuration File");
             out.newLine();
             Config.writeBroadcastInWorldOnly(out);
+            Config.writeBroadcastNearbyOnly(out);
             Config.writeCheckForUpdates(out);
             Config.writeLocale(out);
             out.close();
