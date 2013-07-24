@@ -2,7 +2,10 @@ package com.koletar.jj.mineresetlite;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
 
@@ -208,9 +211,9 @@ public class Mine implements ConfigurationSerializable {
 
     public boolean isInside(Player p) {
         Location l = p.getLocation();
-        return (l.getX() >= minX && l.getX() <= maxX)
-            && (l.getY() >= minY && l.getY() <= maxY)
-            && (l.getZ() >= minZ && l.getZ() <= maxZ);
+        return (l.getBlockX() >= minX && l.getBlockX() <= maxX)
+            && (l.getBlockY() >= minY && l.getBlockY() <= maxY)
+            && (l.getBlockZ() >= minZ && l.getBlockZ() <= maxZ);
     }
 
     public void reset() {
@@ -220,7 +223,15 @@ public class Mine implements ConfigurationSerializable {
         for (Player p : Bukkit.getServer().getOnlinePlayers()) {
             Location l = p.getLocation();
             if (isInside(p)) {
-                p.teleport(new Location(world, l.getX(), maxY + 2D, l.getZ()));
+                // make sure we find a safe location above the mine
+                Location tp = new Location(world, l.getX(), maxY+1, l.getZ());
+                Block block = tp.getBlock();
+                
+                // check to make sure we don't suffocate player
+                if (block.getType() != Material.AIR || block.getRelative(BlockFace.UP).getType() != Material.AIR) {
+                    tp = new Location(world, l.getX(), l.getWorld().getHighestBlockYAt(l.getBlockX(), l.getBlockZ()), l.getZ());
+                }
+                p.teleport(tp);
             }
         }
         //Actually reset
