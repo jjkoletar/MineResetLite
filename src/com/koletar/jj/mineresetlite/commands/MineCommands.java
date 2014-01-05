@@ -179,7 +179,7 @@ public class MineCommands {
         //Build composition list
         StringBuilder csb = new StringBuilder();
         for (Map.Entry<SerializableBlock, Double> entry : mines[0].getComposition().entrySet()) {
-            csb.append(entry.getValue().doubleValue() * 100);
+            csb.append(entry.getValue() * 100);
             csb.append("% ");
             csb.append(Material.getMaterial(entry.getKey().getBlockId()).toString());
             if (entry.getKey().getData() != 0) {
@@ -270,7 +270,7 @@ public class MineCommands {
         double total = 0;
         for (Map.Entry<SerializableBlock, Double> entry : mines[0].getComposition().entrySet()) {
             if (!entry.getKey().equals(block)) {
-                total += entry.getValue().doubleValue();
+                total += entry.getValue();
             } else {
                 block = entry.getKey();
             }

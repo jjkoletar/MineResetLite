@@ -292,7 +292,7 @@ public class Mine implements ConfigurationSerializable {
         Map<SerializableBlock, Double> composition = new HashMap<SerializableBlock, Double>(compositionIn);
         double max = 0;
         for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet()) {
-            max += entry.getValue().doubleValue();
+            max += entry.getValue();
         }
         //Pad the remaining percentages with air
         if (max < 1) {
@@ -301,7 +301,7 @@ public class Mine implements ConfigurationSerializable {
         }
         double i = 0;
         for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet())  {
-            double v = entry.getValue().doubleValue() / max;
+            double v = entry.getValue() / max;
             i += v;
             probabilityMap.add(new CompositionEntry(entry.getKey(), i));
         }

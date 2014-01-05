@@ -23,8 +23,8 @@ public class SerializableBlock {
             throw new IllegalArgumentException("String form of SerializableBlock didn't have exactly 2 numbers");
         }
         try {
-            blockId = Integer.valueOf(bits[0]).intValue();
-            data = Byte.valueOf(bits[1]).byteValue();
+            blockId = Integer.valueOf(bits[0]);
+            data = Byte.valueOf(bits[1]);
         } catch (NumberFormatException nfe) {
             throw new IllegalArgumentException("Unable to convert id to integer and data to byte");
         }
