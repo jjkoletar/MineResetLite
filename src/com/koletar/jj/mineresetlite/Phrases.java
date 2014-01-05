@@ -2,6 +2,7 @@ package com.koletar.jj.mineresetlite;
 
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
@@ -70,6 +71,8 @@ public class Phrases {
             return Material.getMaterial(((SerializableBlock) o).getBlockId()).toString() + (((SerializableBlock) o).getData() != 0 ? ":" + ((SerializableBlock) o).getData() : "");
         } else if (o instanceof ConsoleCommandSender) {
             return phrase("console");
+        } else if (o instanceof BlockCommandSender) {
+            return ((BlockCommandSender) o).getBlock().getType().toString();
         }
         return o.toString();
     }
