@@ -20,6 +20,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import com.koletar.jj.mineresetlite.org.mcstats.Metrics;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,7 +47,7 @@ public class MineResetLite extends JavaPlugin {
     private Metrics metrics = null;
     private int saveTaskId = -1;
     private int resetTaskId = -1;
-    private int updateTaskId = -1;
+    private BukkitTask updateTask = null;
     private boolean needsUpdate;
     private boolean isUpdateCritical;
 
@@ -136,7 +137,7 @@ public class MineResetLite extends JavaPlugin {
         }, 60 * 20L, 60 * 20L);
         //Check for updates
         if (!getDescription().getVersion().contains("dev")) {
-            updateTaskId = getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+            updateTask = getServer().getScheduler().runTaskLaterAsynchronously(this, new Runnable() {
                 public void run() {
                     checkUpdates();
                 }
@@ -168,7 +169,9 @@ public class MineResetLite extends JavaPlugin {
     public void onDisable() {
         getServer().getScheduler().cancelTask(resetTaskId);
         getServer().getScheduler().cancelTask(saveTaskId);
-        getServer().getScheduler().cancelTask(updateTaskId);
+        if (updateTask != null) {
+            updateTask.cancel();
+        }
         HandlerList.unregisterAll(this);
         save();
         logger.info("MineResetLite disabled");
