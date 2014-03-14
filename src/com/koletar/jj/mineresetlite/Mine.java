@@ -206,6 +206,14 @@ public class Mine implements ConfigurationSerializable {
         this.isSilent = isSilent;
     }
 
+    public double getCompositionTotal() {
+        double total = 0;
+        for (Double d : composition.values()) {
+            total += d;
+        }
+        return total;
+    }
+
     public boolean isInside(Player p) {
         Location l = p.getLocation();
         return l.getWorld().equals(world)

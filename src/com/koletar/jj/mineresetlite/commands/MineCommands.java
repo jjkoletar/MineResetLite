@@ -286,7 +286,7 @@ public class MineCommands {
             return;
         }
         mines[0].getComposition().put(block, percentage);
-        sender.sendMessage(phrase("mineCompositionSet", mines[0], percentage * 100, block));
+        sender.sendMessage(phrase("mineCompositionSet", mines[0], percentage * 100, block, (1 - mines[0].getCompositionTotal()) * 100));
         plugin.buffSave();
     }
 
@@ -329,7 +329,7 @@ public class MineCommands {
         for (Map.Entry<SerializableBlock, Double> entry : mines[0].getComposition().entrySet()) {
             if (entry.getKey().equals(block)) {
                 mines[0].getComposition().remove(entry.getKey());
-                sender.sendMessage(phrase("blockRemovedFromMine", mines[0], block));
+                sender.sendMessage(phrase("blockRemovedFromMine", mines[0], block, (1 - mines[0].getCompositionTotal()) * 100));
                 return;
             }
         }
