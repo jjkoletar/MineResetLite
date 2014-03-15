@@ -21,12 +21,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import com.koletar.jj.mineresetlite.org.mcstats.Metrics;
 import org.bukkit.scheduler.BukkitTask;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -149,17 +155,20 @@ public class MineResetLite extends JavaPlugin {
 
     private void checkUpdates() {
         try {
-            if (!Config.getCheckForUpdates()) {
-                return;
-            }
-            URL updateFile = new URL("http://dl.dropbox.com/u/16290839/MineResetLite/update.yml");
-            YamlConfiguration updates = YamlConfiguration.loadConfiguration(updateFile.openStream());
-            int remoteVer = updates.getInt("version");
-            boolean isCritical = updates.getConfigurationSection(String.valueOf(remoteVer)).getBoolean("critical");
+            URL updateFile = new URL("https://api.curseforge.com/servermods/files?projectIds=45520");
+            URLConnection conn = updateFile.openConnection();
+            conn.addRequestProperty("User-Agent", "MineResetLite/v" + getDescription().getVersion() + " by jjkoletar");
+            String rv = new BufferedReader(new InputStreamReader(conn.getInputStream())).readLine();
+            JSONArray resp = (JSONArray) JSONValue.parse(rv);
+            if (resp.size() == 0) return;
+            String name = ((JSONObject) resp.get(resp.size() - 1)).get("name").toString();
+            String[] bits = name.split(" ");
+            String remoteVer = bits[bits.length - 1];
+            int remoteVal = Integer.valueOf(remoteVer.replace(".", ""));
             int localVer = Integer.valueOf(getDescription().getVersion().replace(".", ""));
-            if (remoteVer > localVer) {
+            if (remoteVal > localVer) {
                 needsUpdate = true;
-                isUpdateCritical = isCritical;
+
             }
         } catch (Throwable t) {
             t.printStackTrace();
