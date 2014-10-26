@@ -333,7 +333,9 @@ public class MineResetLite extends JavaPlugin {
             }
             Bukkit.getLogger().info(message);
         } else {
-            Bukkit.getServer().broadcastMessage(message);
+            for(Player p : Bukkit.getServer().getOnlinePlayers()){
+                p.sendMessage(message);
+            }
         }
     }
 }
