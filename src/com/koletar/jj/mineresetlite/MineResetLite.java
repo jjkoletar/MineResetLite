@@ -223,7 +223,7 @@ public class MineResetLite extends JavaPlugin {
     public Mine[] matchMines(String in) {
         List<Mine> matches = new LinkedList<Mine>();
         for (Mine mine : mines) {
-            if (mine.getName().toLowerCase().contains(in.toLowerCase())) {
+            if (mine.getName().toLowerCase().equals(in.toLowerCase())) {
                 matches.add(mine);
             }
         }
