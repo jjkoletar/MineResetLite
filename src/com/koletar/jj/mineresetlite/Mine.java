@@ -2,7 +2,10 @@ package com.koletar.jj.mineresetlite;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
 
@@ -206,20 +209,11 @@ public class Mine implements ConfigurationSerializable {
         this.isSilent = isSilent;
     }
 
-    public double getCompositionTotal() {
-        double total = 0;
-        for (Double d : composition.values()) {
-            total += d;
-        }
-        return total;
-    }
-
     public boolean isInside(Player p) {
         Location l = p.getLocation();
-        return l.getWorld().equals(world)
-            && (l.getX() >= minX && l.getX() <= maxX)
-            && (l.getY() >= minY && l.getY() <= maxY)
-            && (l.getZ() >= minZ && l.getZ() <= maxZ);
+        return (l.getBlockX() >= minX && l.getBlockX() <= maxX)
+            && (l.getBlockY() >= minY && l.getBlockY() <= maxY)
+            && (l.getBlockZ() >= minZ && l.getBlockZ() <= maxZ);
     }
 
     public void reset() {
@@ -229,7 +223,15 @@ public class Mine implements ConfigurationSerializable {
         for (Player p : Bukkit.getServer().getOnlinePlayers()) {
             Location l = p.getLocation();
             if (isInside(p)) {
-                p.teleport(new Location(world, l.getX(), maxY + 2D, l.getZ()));
+                // make sure we find a safe location above the mine
+                Location tp = new Location(world, l.getX(), maxY+1, l.getZ());
+                Block block = tp.getBlock();
+                
+                // check to make sure we don't suffocate player
+                if (block.getType() != Material.AIR || block.getRelative(BlockFace.UP).getType() != Material.AIR) {
+                    tp = new Location(world, l.getX(), l.getWorld().getHighestBlockYAt(l.getBlockX(), l.getBlockZ()), l.getZ());
+                }
+                p.teleport(tp);
             }
         }
         //Actually reset
@@ -300,7 +302,7 @@ public class Mine implements ConfigurationSerializable {
         Map<SerializableBlock, Double> composition = new HashMap<SerializableBlock, Double>(compositionIn);
         double max = 0;
         for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet()) {
-            max += entry.getValue();
+            max += entry.getValue().doubleValue();
         }
         //Pad the remaining percentages with air
         if (max < 1) {
@@ -309,7 +311,7 @@ public class Mine implements ConfigurationSerializable {
         }
         double i = 0;
         for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet())  {
-            double v = entry.getValue() / max;
+            double v = entry.getValue().doubleValue() / max;
             i += v;
             probabilityMap.add(new CompositionEntry(entry.getKey(), i));
         }
