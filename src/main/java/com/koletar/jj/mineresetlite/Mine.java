@@ -108,27 +108,6 @@ public class Mine implements ConfigurationSerializable {
         }
     }
 
-    public static ArrayList<CompositionEntry> mapComposition(Map<SerializableBlock, Double> compositionIn) {
-        ArrayList<CompositionEntry> probabilityMap = new ArrayList<CompositionEntry>();
-        Map<SerializableBlock, Double> composition = new HashMap<SerializableBlock, Double>(compositionIn);
-        double max = 0;
-        for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet()) {
-            max += entry.getValue().doubleValue();
-        }
-        //Pad the remaining percentages with air
-        if (max < 1) {
-            composition.put(new SerializableBlock(0), 1 - max);
-            max = 1;
-        }
-        double i = 0;
-        for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet()) {
-            double v = entry.getValue().doubleValue() / max;
-            i += v;
-            probabilityMap.add(new CompositionEntry(entry.getKey(), i));
-        }
-        return probabilityMap;
-    }
-
     public Map<String, Object> serialize() {
         Map<String, Object> me = new HashMap<String, Object>();
         me.put("minX", minX);
@@ -232,8 +211,8 @@ public class Mine implements ConfigurationSerializable {
     public boolean isInside(Player p) {
         Location l = p.getLocation();
         return (l.getBlockX() >= minX && l.getBlockX() <= maxX)
-            && (l.getBlockY() >= minY && l.getBlockY() <= maxY)
-            && (l.getBlockZ() >= minZ && l.getBlockZ() <= maxZ);
+                && (l.getBlockY() >= minY && l.getBlockY() <= maxY)
+                && (l.getBlockZ() >= minZ && l.getBlockZ() <= maxZ);
     }
 
     public void reset() {
@@ -244,9 +223,9 @@ public class Mine implements ConfigurationSerializable {
             Location l = p.getLocation();
             if (isInside(p)) {
                 // make sure we find a safe location above the mine
-                Location tp = new Location(world, l.getX(), maxY+1, l.getZ());
+                Location tp = new Location(world, l.getX(), maxY + 1, l.getZ());
                 Block block = tp.getBlock();
-                
+
                 // check to make sure we don't suffocate player
                 if (block.getType() != Material.AIR || block.getRelative(BlockFace.UP).getType() != Material.AIR) {
                     tp = new Location(world, l.getX(), l.getWorld().getHighestBlockYAt(l.getBlockX(), l.getBlockZ()), l.getZ());
@@ -330,7 +309,7 @@ public class Mine implements ConfigurationSerializable {
             max = 1;
         }
         double i = 0;
-        for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet())  {
+        for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet()) {
             double v = entry.getValue().doubleValue() / max;
             i += v;
             probabilityMap.add(new CompositionEntry(entry.getKey(), i));
