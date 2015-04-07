@@ -2,14 +2,16 @@ package com.koletar.jj.mineresetlite;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.logging.Logger;
 
 /**
@@ -108,27 +110,6 @@ public class Mine implements ConfigurationSerializable {
         }
     }
 
-    public static ArrayList<CompositionEntry> mapComposition(Map<SerializableBlock, Double> compositionIn) {
-        ArrayList<CompositionEntry> probabilityMap = new ArrayList<CompositionEntry>();
-        Map<SerializableBlock, Double> composition = new HashMap<SerializableBlock, Double>(compositionIn);
-        double max = 0;
-        for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet()) {
-            max += entry.getValue().doubleValue();
-        }
-        //Pad the remaining percentages with air
-        if (max < 1) {
-            composition.put(new SerializableBlock(0), 1 - max);
-            max = 1;
-        }
-        double i = 0;
-        for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet()) {
-            double v = entry.getValue().doubleValue() / max;
-            i += v;
-            probabilityMap.add(new CompositionEntry(entry.getKey(), i));
-        }
-        return probabilityMap;
-    }
-
     public Map<String, Object> serialize() {
         Map<String, Object> me = new HashMap<String, Object>();
         me.put("minX", minX);
@@ -170,21 +151,21 @@ public class Mine implements ConfigurationSerializable {
         this.fillMode = fillMode;
     }
 
-    public List<Integer> getResetWarnings() {
-        return resetWarnings;
+    public void setResetDelay(int minutes) {
+        resetDelay = minutes;
+        resetClock = minutes;
     }
 
     public void setResetWarnings(List<Integer> warnings) {
         resetWarnings = warnings;
     }
 
-    public int getResetDelay() {
-        return resetDelay;
+    public List<Integer> getResetWarnings() {
+        return resetWarnings;
     }
 
-    public void setResetDelay(int minutes) {
-        resetDelay = minutes;
-        resetClock = minutes;
+    public int getResetDelay() {
+        return resetDelay;
     }
 
     /**
@@ -217,10 +198,6 @@ public class Mine implements ConfigurationSerializable {
         return composition;
     }
 
-    public int getCompositionTotal() {
-        return composition.size();
-    }
-
     public boolean isSilent() {
         return isSilent;
     }
@@ -229,11 +206,20 @@ public class Mine implements ConfigurationSerializable {
         this.isSilent = isSilent;
     }
 
+    public double getCompositionTotal() {
+        double total = 0;
+        for (Double d : composition.values()) {
+            total += d;
+        }
+        return total;
+    }
+
     public boolean isInside(Player p) {
         Location l = p.getLocation();
-        return (l.getBlockX() >= minX && l.getBlockX() <= maxX)
-            && (l.getBlockY() >= minY && l.getBlockY() <= maxY)
-            && (l.getBlockZ() >= minZ && l.getBlockZ() <= maxZ);
+        return l.getWorld().equals(world)
+            && (l.getX() >= minX && l.getX() <= maxX)
+            && (l.getY() >= minY && l.getY() <= maxY)
+            && (l.getZ() >= minZ && l.getZ() <= maxZ);
     }
 
     public void reset() {
@@ -243,15 +229,7 @@ public class Mine implements ConfigurationSerializable {
         for (Player p : Bukkit.getServer().getOnlinePlayers()) {
             Location l = p.getLocation();
             if (isInside(p)) {
-                // make sure we find a safe location above the mine
-                Location tp = new Location(world, l.getX(), maxY+1, l.getZ());
-                Block block = tp.getBlock();
-                
-                // check to make sure we don't suffocate player
-                if (block.getType() != Material.AIR || block.getRelative(BlockFace.UP).getType() != Material.AIR) {
-                    tp = new Location(world, l.getX(), l.getWorld().getHighestBlockYAt(l.getBlockX(), l.getBlockZ()), l.getZ());
-                }
-                p.teleport(tp);
+                p.teleport(new Location(world, l.getX(), maxY + 2D, l.getZ()));
             }
         }
         //Actually reset
@@ -322,7 +300,7 @@ public class Mine implements ConfigurationSerializable {
         Map<SerializableBlock, Double> composition = new HashMap<SerializableBlock, Double>(compositionIn);
         double max = 0;
         for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet()) {
-            max += entry.getValue().doubleValue();
+            max += entry.getValue();
         }
         //Pad the remaining percentages with air
         if (max < 1) {
@@ -331,7 +309,7 @@ public class Mine implements ConfigurationSerializable {
         }
         double i = 0;
         for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet())  {
-            double v = entry.getValue().doubleValue() / max;
+            double v = entry.getValue() / max;
             i += v;
             probabilityMap.add(new CompositionEntry(entry.getKey(), i));
         }

@@ -232,8 +232,13 @@ public class Mine implements ConfigurationSerializable {
     public boolean isInside(Player p) {
         Location l = p.getLocation();
         return (l.getBlockX() >= minX && l.getBlockX() <= maxX)
+<<<<<<< HEAD:src/main/java/com/koletar/jj/mineresetlite/Mine.java
+                && (l.getBlockY() >= minY && l.getBlockY() <= maxY)
+                && (l.getBlockZ() >= minZ && l.getBlockZ() <= maxZ);
+=======
             && (l.getBlockY() >= minY && l.getBlockY() <= maxY)
             && (l.getBlockZ() >= minZ && l.getBlockZ() <= maxZ);
+>>>>>>> upstream/master:src/com/koletar/jj/mineresetlite/Mine.java
     }
 
     public void reset() {
@@ -244,9 +249,15 @@ public class Mine implements ConfigurationSerializable {
             Location l = p.getLocation();
             if (isInside(p)) {
                 // make sure we find a safe location above the mine
+<<<<<<< HEAD:src/main/java/com/koletar/jj/mineresetlite/Mine.java
+                Location tp = new Location(world, l.getX(), maxY + 1, l.getZ());
+                Block block = tp.getBlock();
+
+=======
                 Location tp = new Location(world, l.getX(), maxY+1, l.getZ());
                 Block block = tp.getBlock();
                 
+>>>>>>> upstream/master:src/com/koletar/jj/mineresetlite/Mine.java
                 // check to make sure we don't suffocate player
                 if (block.getType() != Material.AIR || block.getRelative(BlockFace.UP).getType() != Material.AIR) {
                     tp = new Location(world, l.getX(), l.getWorld().getHighestBlockYAt(l.getBlockX(), l.getBlockZ()), l.getZ());
@@ -316,6 +327,8 @@ public class Mine implements ConfigurationSerializable {
             return chance;
         }
     }
+<<<<<<< HEAD:src/main/java/com/koletar/jj/mineresetlite/Mine.java
+=======
 
     public static ArrayList<CompositionEntry> mapComposition(Map<SerializableBlock, Double> compositionIn) {
         ArrayList<CompositionEntry> probabilityMap = new ArrayList<CompositionEntry>();
@@ -337,4 +350,5 @@ public class Mine implements ConfigurationSerializable {
         }
         return probabilityMap;
     }
+>>>>>>> upstream/master:src/com/koletar/jj/mineresetlite/Mine.java
 }

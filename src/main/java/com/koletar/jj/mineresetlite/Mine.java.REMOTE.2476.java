@@ -9,7 +9,12 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.logging.Logger;
 
 /**
@@ -108,27 +113,6 @@ public class Mine implements ConfigurationSerializable {
         }
     }
 
-    public static ArrayList<CompositionEntry> mapComposition(Map<SerializableBlock, Double> compositionIn) {
-        ArrayList<CompositionEntry> probabilityMap = new ArrayList<CompositionEntry>();
-        Map<SerializableBlock, Double> composition = new HashMap<SerializableBlock, Double>(compositionIn);
-        double max = 0;
-        for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet()) {
-            max += entry.getValue().doubleValue();
-        }
-        //Pad the remaining percentages with air
-        if (max < 1) {
-            composition.put(new SerializableBlock(0), 1 - max);
-            max = 1;
-        }
-        double i = 0;
-        for (Map.Entry<SerializableBlock, Double> entry : composition.entrySet()) {
-            double v = entry.getValue().doubleValue() / max;
-            i += v;
-            probabilityMap.add(new CompositionEntry(entry.getKey(), i));
-        }
-        return probabilityMap;
-    }
-
     public Map<String, Object> serialize() {
         Map<String, Object> me = new HashMap<String, Object>();
         me.put("minX", minX);
@@ -170,21 +154,21 @@ public class Mine implements ConfigurationSerializable {
         this.fillMode = fillMode;
     }
 
-    public List<Integer> getResetWarnings() {
-        return resetWarnings;
+    public void setResetDelay(int minutes) {
+        resetDelay = minutes;
+        resetClock = minutes;
     }
 
     public void setResetWarnings(List<Integer> warnings) {
         resetWarnings = warnings;
     }
 
-    public int getResetDelay() {
-        return resetDelay;
+    public List<Integer> getResetWarnings() {
+        return resetWarnings;
     }
 
-    public void setResetDelay(int minutes) {
-        resetDelay = minutes;
-        resetClock = minutes;
+    public int getResetDelay() {
+        return resetDelay;
     }
 
     /**
@@ -215,10 +199,6 @@ public class Mine implements ConfigurationSerializable {
 
     public Map<SerializableBlock, Double> getComposition() {
         return composition;
-    }
-
-    public int getCompositionTotal() {
-        return composition.size();
     }
 
     public boolean isSilent() {
