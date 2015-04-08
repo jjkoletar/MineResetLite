@@ -120,7 +120,12 @@ public class MineResetLite extends JavaPlugin {
             }
         }, 60 * 20L, 60 * 20L);
 
-        getServer().getPluginManager().registerEvents(new UpdateWarner(), this);
+        try {
+            Metrics metrics = new Metrics(this);
+            metrics.start();
+        } catch (IOException e) {
+        }
+
         logger.info("MineResetLite version " + getDescription().getVersion() + " enabled!");
     }
 
