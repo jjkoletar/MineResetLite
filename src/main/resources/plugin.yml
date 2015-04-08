@@ -1,7 +1,7 @@
 name: MineResetLite
-version: 0.4.2
+version: 0.4.3
 main: com.koletar.jj.mineresetlite.MineResetLite
-author: VirtualByte
+authors: [jjKoletar, VirtualByte, TWWSYesterday]
 description: A lightweight solution for Mine management.
 softdepend: [WorldEdit, Multiverse-Core]
 commands:

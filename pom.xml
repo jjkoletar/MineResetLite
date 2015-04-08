@@ -6,7 +6,7 @@
 
     <groupId>me.virtualbyte.plugins</groupId>
     <artifactId>mineresetlite</artifactId>
-    <version>0.4.2</version>
+    <version>0.4.3</version>
     <name>MineResetLite</name>
 
     <repositories>

@@ -554,4 +554,27 @@ public class MineCommands {
         plugin.buffSave();
         sender.sendMessage(phrase("rescheduled"));
     }
+
+    @Command(aliases = {"tp", "teleport"},
+            description = "Teleport to a mine",
+            help = {"This will teleport you to the center of a mine at the top."},
+            usage = "<mine name>",
+            permissions = {"mineresetlite.mine.tp"},
+            min = 1, max = -1, onlyPlayers = true)
+    public void teleport(CommandSender sender, String[] args) {
+        Mine mine = null;
+
+        for (Mine aMine : plugin.mines) {
+            if(aMine.getName().equalsIgnoreCase(args[0])) {
+                mine = aMine;
+            }
+        }
+
+        if(mine == null) {
+            sender.sendMessage(phrase("noMinesMatched"));
+            return;
+        }
+
+        mine.teleport((Player) sender);
+    }
 }

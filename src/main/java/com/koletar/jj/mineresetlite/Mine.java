@@ -196,8 +196,12 @@ public class Mine implements ConfigurationSerializable {
         return composition;
     }
 
-    public int getCompositionTotal() {
-        return composition.size();
+    public double getCompositionTotal() {
+        double total = 0;
+        for (Double d : composition.values()) {
+            total += d;
+        }
+        return total;
     }
 
     public boolean isSilent() {
@@ -320,4 +324,19 @@ public class Mine implements ConfigurationSerializable {
         }
         return probabilityMap;
     }
+
+    public void teleport(Player player) {
+        Location max = new Location(world, Math.max(this.maxX, this.minX), this.maxY, Math.max(this.maxZ, this.minZ));
+        Location min = new Location(world, Math.min(this.maxX, this.minX), this.minY, Math.min(this.maxZ, this.minZ));
+
+        Location location = max.add(min).multiply(0.5);
+        Block block = location.getBlock();
+
+        if (block.getType() != Material.AIR || block.getRelative(BlockFace.UP).getType() != Material.AIR) {
+            location = new Location(world, location.getX(), location.getWorld().getHighestBlockYAt(location.getBlockX(), location.getBlockZ()), location.getZ());
+        }
+
+        player.teleport(location);
+    }
+
 }
