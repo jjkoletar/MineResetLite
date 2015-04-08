@@ -153,24 +153,52 @@ public class MineCommands {
     }
 
     @Command(aliases = {"info", "i"},
-            description = "List information about a mine",
-            usage = "<mine name>",
+            description = "List information about a mine, or the mine you are standing in.",
+            usage = "[mine name]",
             permissions = {"mineresetlite.mine.info"},
-            min = 1, max = -1, onlyPlayers = false)
+            min = 0, max = -1, onlyPlayers = false)
     public void mineInfo(CommandSender sender, String[] args) {
-        Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
-        if (mines.length > 1) {
-            sender.sendMessage(phrase("tooManyMines"));
-            return;
-        } else if (mines.length == 0) {
-            sender.sendMessage(phrase("noMinesMatched"));
-            return;
+        Mine mine = null;
+
+        if (args.length == 1) {
+            Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
+            if (mines.length > 1) {
+                sender.sendMessage(phrase("tooManyMines"));
+                return;
+            } else if (mines.length == 0) {
+                sender.sendMessage(phrase("noMinesMatched"));
+                return;
+            }
+
+            mine = mines[0];
+        } else {
+            if(sender instanceof Player) {
+                boolean inside = false;
+
+                for (Mine aMine : plugin.mines) {
+                    if (aMine.isInside((Player) sender)) {
+                        mine = aMine;
+                        inside = true;
+                        continue;
+                    }
+                }
+
+                if(!inside) {
+                    sender.sendMessage(phrase("notInsideAMine"));
+                    return;
+                }
+            } else {
+                sender.sendMessage(phrase("invalidArguments"));
+                sender.sendMessage(phrase("invalidArgsUsage", "info", "<mine name>"));
+                return;
+            }
         }
-        sender.sendMessage(phrase("mineInfoName", mines[0]));
-        sender.sendMessage(phrase("mineInfoWorld", mines[0].getWorld()));
+
+        sender.sendMessage(phrase("mineInfoName", mine.getName()));
+        sender.sendMessage(phrase("mineInfoWorld", mine.getWorld()));
         //Build composition list
         StringBuilder csb = new StringBuilder();
-        for (Map.Entry<SerializableBlock, Double> entry : mines[0].getComposition().entrySet()) {
+        for (Map.Entry<SerializableBlock, Double> entry : mine.getComposition().entrySet()) {
             csb.append(entry.getValue() * 100);
             csb.append("% ");
             csb.append(Material.getMaterial(entry.getKey().getBlockId()).toString());
@@ -184,18 +212,18 @@ public class MineCommands {
             csb.delete(csb.length() - 2, csb.length() - 1);
         }
         sender.sendMessage(phrase("mineInfoComposition", csb));
-        if (mines[0].getResetDelay() != 0) {
-            sender.sendMessage(phrase("mineInfoResetDelay", mines[0].getResetDelay()));
-            sender.sendMessage(phrase("mineInfoTimeUntilReset", mines[0].getTimeUntilReset()));
+        if (mine.getResetDelay() != 0) {
+            sender.sendMessage(phrase("mineInfoResetDelay", mine.getResetDelay()));
+            sender.sendMessage(phrase("mineInfoTimeUntilReset", mine.getTimeUntilReset()));
         }
-        sender.sendMessage(phrase("mineInfoSilence", mines[0].isSilent()));
-        if (mines[0].getResetWarnings().size() > 0) {
-            sender.sendMessage(phrase("mineInfoWarningTimes", StringTools.buildList(mines[0].getResetWarnings(), "", ", ")));
+        sender.sendMessage(phrase("mineInfoSilence", mine.isSilent()));
+        if (mine.getResetWarnings().size() > 0) {
+            sender.sendMessage(phrase("mineInfoWarningTimes", StringTools.buildList(mine.getResetWarnings(), "", ", ")));
         }
-        if (mines[0].getSurface() != null) {
-            sender.sendMessage(phrase("mineInfoSurface", mines[0].getSurface()));
+        if (mine.getSurface() != null) {
+            sender.sendMessage(phrase("mineInfoSurface", mine.getSurface()));
         }
-        if (mines[0].getFillMode()) {
+        if (mine.getFillMode()) {
             sender.sendMessage(phrase("mineInfoFillMode"));
         }
     }

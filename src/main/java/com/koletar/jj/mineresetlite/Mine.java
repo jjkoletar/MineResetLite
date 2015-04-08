@@ -209,8 +209,12 @@ public class Mine implements ConfigurationSerializable {
     }
 
     public boolean isInside(Player p) {
-        Location l = p.getLocation();
-        return (l.getBlockX() >= minX && l.getBlockX() <= maxX)
+        return isInside(p.getLocation());
+    }
+
+    public boolean isInside(Location l) {
+        return (l.getWorld().getName().equals(getWorld().getName()))
+                && (l.getBlockX() >= minX && l.getBlockX() <= maxX)
                 && (l.getBlockY() >= minY && l.getBlockY() <= maxY)
                 && (l.getBlockZ() >= minZ && l.getBlockZ() <= maxZ);
     }
