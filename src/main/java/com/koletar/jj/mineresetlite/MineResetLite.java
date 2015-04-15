@@ -126,6 +126,11 @@ public class MineResetLite extends JavaPlugin {
         } catch (IOException e) {
         }
 
+        if(getServer().getPluginManager().getPlugin("PrisonMines").isEnabled()) {
+            convertPrisonMines();
+            getServer().getPluginManager().disablePlugin(getServer().getPluginManager().getPlugin("PrisonMines"));
+        }
+
         logger.info("MineResetLite version " + getDescription().getVersion() + " enabled!");
     }
 
@@ -292,4 +297,53 @@ public class MineResetLite extends JavaPlugin {
             }
         }
     }
+
+    public void convertPrisonMines() {
+        for(File file : getFilesInsideFolder(new File(getServer().getPluginManager().getPlugin("PrisonMines").getDataFolder(), "mines"))) {
+            FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+            String name = config.getString("Name");
+            String[] coords = config.getString("Region").split(",");
+            String world = coords[0];
+            int maxX = Integer.valueOf(coords[1]);
+            int maxY = Integer.valueOf(coords[2]);
+            int maxZ = Integer.valueOf(coords[3]);
+            int minX = Integer.valueOf(coords[4]);
+            int minY = Integer.valueOf(coords[5]);
+            int minZ = Integer.valueOf(coords[6]);
+
+            Mine mine = new Mine(minX, minY, minZ, maxX, maxY, maxZ, name, Bukkit.getWorld(world));
+            mine.setSilence(false);
+            mine.setFillMode(false);
+            mine.setResetDelay(0);
+
+            for(String blockComposition : config.getStringList("Blocks")) {
+                int id = Material.getMaterial(blockComposition.split("@")[0]).getId();
+                int percentage = Integer.valueOf(blockComposition.split("@")[1].split(":")[1]);
+                mine.getComposition().put(new SerializableBlock(id), Double.valueOf("0." + percentage));
+            }
+
+            Bukkit.getLogger().info("Converted " + file.getName() +  ", deleting file...");
+            file.delete();
+        }
+
+        Bukkit.getLogger().info("PrisonMines conversion complete - please remove the folder PrisonMines. Disabling plugin...");
+    }
+
+    public List<File> getFilesInsideFolder(File parentFile) {
+        List<File> results = new ArrayList<File>();
+
+        File[] files = parentFile.listFiles();
+
+        if(parentFile.listFiles() != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    results.add(file);
+                }
+            }
+        }
+
+        return results;
+    }
+
 }
