@@ -6,7 +6,7 @@
 
     <groupId>me.virtualbyte.plugins</groupId>
     <artifactId>mineresetlite</artifactId>
-    <version>0.4.3</version>
+    <version>0.4.5</version>
     <name>MineResetLite</name>
 
     <repositories>
@@ -24,7 +24,7 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.8.3-R0.1-SNAPSHOT</version>
+            <version>1.8.4-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
