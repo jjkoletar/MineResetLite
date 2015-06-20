@@ -39,15 +39,17 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
  */
 public class MineResetLite extends JavaPlugin {
 	
-	public List<Mine>		mines;
-	private Logger			logger;
-	private CommandManager	commandManager;
-	private WorldEditPlugin	worldEdit	= null;
-	private int				saveTaskId	= -1;
-	private int				resetTaskId	= -1;
-	private BukkitTask		updateTask	= null;
-	private boolean			needsUpdate;
-	private boolean			isUpdateCritical;
+	public List<Mine>			mines;
+	private Logger				logger;
+	private CommandManager		commandManager;
+	private WorldEditPlugin		worldEdit	= null;
+	private int					saveTaskId	= -1;
+	private int					resetTaskId	= -1;
+	private BukkitTask			updateTask	= null;
+	private boolean				needsUpdate;
+	private boolean				isUpdateCritical;
+	
+	public static MineResetLite	instance;
 	
 	public static void broadcast(String message, Mine mine) {
 		if (Config.getBroadcastNearbyOnly()) {
@@ -61,7 +63,9 @@ public class MineResetLite extends JavaPlugin {
 			for (Player p : mine.getWorld().getPlayers()) {
 				p.sendMessage(message);
 			}
-			Bukkit.getLogger().info(message);
+			if (MineResetLite.instance.getConfig().getBoolean("consoleLogMineReset", false)) {
+				Bukkit.getLogger().info(message);
+			}
 		} else {
 			for (Player p : Bukkit.getServer().getOnlinePlayers()) {
 				p.sendMessage(message);
@@ -70,6 +74,7 @@ public class MineResetLite extends JavaPlugin {
 	}
 	
 	public void onEnable() {
+		MineResetLite.instance = this;
 		mines = new ArrayList<Mine>();
 		logger = getLogger();
 		if (!setupConfig()) {
