@@ -58,7 +58,9 @@ public class MineResetLite extends JavaPlugin {
 					p.sendMessage(message);
 				}
 			}
-			Bukkit.getLogger().info(message);
+			if (MineResetLite.instance.getConfig().getBoolean("consoleLogMineReset", false)) {
+				Bukkit.getLogger().info(message);
+			}
 		} else if (Config.getBroadcastInWorldOnly()) {
 			for (Player p : mine.getWorld().getPlayers()) {
 				p.sendMessage(message);
