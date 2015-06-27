@@ -138,7 +138,7 @@ public class MineResetLite extends JavaPlugin {
 		} catch (IOException e) {
 		}
 		
-		if (getServer().getPluginManager().getPlugin("PrisonMines").isEnabled()) {
+		if (getServer().getPluginManager().getPlugin("PrisonMines") != null) {
 			convertPrisonMines();
 			getServer().getPluginManager().disablePlugin(getServer().getPluginManager().getPlugin("PrisonMines"));
 		}
