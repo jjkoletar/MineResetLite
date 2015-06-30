@@ -37,7 +37,10 @@ public class Mine implements ConfigurationSerializable {
 	private int								resetClock;
 	private boolean							isSilent;
 	private boolean							ignoreLadders = false;
-	
+	private int								tpX = 0;
+	private int								tpY = -1;
+	private int								tpZ = 0;
+
 	public Mine(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, String name, World world) {
 		this.minX = minX;
 		this.minY = minY;
@@ -50,7 +53,7 @@ public class Mine implements ConfigurationSerializable {
 		composition = new HashMap<SerializableBlock, Double>();
 		resetWarnings = new LinkedList<Integer>();
 	}
-	
+
 	public Mine(Map<String, Object> me) {
 		try {
 			minX = (Integer) me.get("minX");
@@ -115,8 +118,13 @@ public class Mine implements ConfigurationSerializable {
 		if (me.containsKey("ignoreLadders")) {
 			ignoreLadders = (Boolean) me.get("ignoreLadders");
 		}
+		if (me.containsKey("tpY")){ //Should contain all three if it contains this one
+			tpX = (Integer) me.get("tpX");
+			tpY = (Integer) me.get("tpY");
+			tpZ = (Integer) me.get("tpZ");
+		}
 	}
-	
+
 	public Map<String, Object> serialize() {
 		Map<String, Object> me = new HashMap<String, Object>();
 		me.put("minX", minX);
@@ -148,34 +156,37 @@ public class Mine implements ConfigurationSerializable {
 		me.put("resetClock", resetClock);
 		me.put("isSilent", isSilent);
 		me.put("ignoreLadders", ignoreLadders);
+		me.put("tpX", tpX);
+		me.put("tpY", tpY);
+		me.put("tpZ", tpZ);
 		return me;
 	}
-	
+
 	public boolean getFillMode() {
 		return fillMode;
 	}
-	
+
 	public void setFillMode(boolean fillMode) {
 		this.fillMode = fillMode;
 	}
-	
+
 	public List<Integer> getResetWarnings() {
 		return resetWarnings;
 	}
-	
+
 	public void setResetWarnings(List<Integer> warnings) {
 		resetWarnings = warnings;
 	}
-	
+
 	public int getResetDelay() {
 		return resetDelay;
 	}
-	
+
 	public void setResetDelay(int minutes) {
 		resetDelay = minutes;
 		resetClock = minutes;
 	}
-	
+
 	/**
 	 * Return the length of time until the next automatic reset. The actual
 	 * length of time is anywhere between n and n-1 minutes.
@@ -185,27 +196,27 @@ public class Mine implements ConfigurationSerializable {
 	public int getTimeUntilReset() {
 		return resetClock;
 	}
-	
+
 	public SerializableBlock getSurface() {
 		return surface;
 	}
-	
+
 	public void setSurface(SerializableBlock surface) {
 		this.surface = surface;
 	}
-	
+
 	public World getWorld() {
 		return world;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public Map<SerializableBlock, Double> getComposition() {
 		return composition;
 	}
-	
+
 	public double getCompositionTotal() {
 		double total = 0;
 		for (Double d : composition.values()) {
@@ -213,63 +224,63 @@ public class Mine implements ConfigurationSerializable {
 		}
 		return total;
 	}
-	
+
 	public int getMinX() {
 		return minX;
 	}
-	
+
 	public void setMinX(int minX) {
 		this.minX = minX;
 	}
-	
+
 	public int getMinY() {
 		return minY;
 	}
-	
+
 	public void setMinY(int minY) {
 		this.minY = minY;
 	}
-	
+
 	public int getMinZ() {
 		return minZ;
 	}
-	
+
 	public void setMinZ(int minZ) {
 		this.minZ = minZ;
 	}
-	
+
 	public int getMaxX() {
 		return maxX;
 	}
-	
+
 	public void setMaxX(int maxX) {
 		this.maxX = maxX;
 	}
-	
+
 	public int getMaxY() {
 		return maxY;
 	}
-	
+
 	public void setMaxY(int maxY) {
 		this.maxY = maxY;
 	}
-	
+
 	public int getMaxZ() {
 		return maxZ;
 	}
-	
+
 	public void setMaxZ(int maxZ) {
 		this.maxZ = maxZ;
 	}
-	
+
 	public boolean isSilent() {
 		return isSilent;
 	}
-	
+
 	public void setSilence(boolean isSilent) {
 		this.isSilent = isSilent;
 	}
-	
+
 	public boolean isIgnoreLadders() {
 		return ignoreLadders;
 	}
@@ -278,16 +289,26 @@ public class Mine implements ConfigurationSerializable {
 		this.ignoreLadders = ignoreLadders;
 	}
 
+	public void setTpPos(Location l) {
+		tpX = l.getBlockX();
+		tpY = l.getBlockY();
+		tpZ = l.getBlockZ();
+	}
+
+	public Location getTpPos() {
+		return new Location(getWorld(), tpX, tpY, tpZ);
+	}
+
 	public boolean isInside(Player p) {
 		return isInside(p.getLocation());
 	}
-	
+
 	public boolean isInside(Location l) {
 		return (l.getWorld().getName().equals(getWorld().getName()))
 				&& (l.getBlockX() >= minX && l.getBlockX() <= maxX) && (l.getBlockY() >= minY && l.getBlockY() <= maxY)
 				&& (l.getBlockZ() >= minZ && l.getBlockZ() <= maxZ);
 	}
-	
+
 	public void reset() {
 		// Get probability map
 		List<CompositionEntry> probabilityMap = mapComposition(composition);
@@ -295,16 +316,20 @@ public class Mine implements ConfigurationSerializable {
 		for (Player p : Bukkit.getServer().getOnlinePlayers()) {
 			Location l = p.getLocation();
 			if (isInside(p)) {
-				// make sure we find a safe location above the mine
-				Location tp = new Location(world, l.getX(), maxY + 1, l.getZ());
-				Block block = tp.getBlock();
-				
-				// check to make sure we don't suffocate player
-				if (block.getType() != Material.AIR || block.getRelative(BlockFace.UP).getType() != Material.AIR) {
-					tp = new Location(world, l.getX(), l.getWorld().getHighestBlockYAt(l.getBlockX(), l.getBlockZ()),
-							l.getZ());
+				if (tpY >= 0) { //If tpY is set to something (Not -1)
+					p.teleport(getTpPos());
+				} else { //No tp position set (Teleport up)
+					// make sure we find a safe location above the mine
+					Location tp = new Location(world, l.getX(), maxY + 1, l.getZ());
+					Block block = tp.getBlock();
+
+					// check to make sure we don't suffocate player
+					if (block.getType() != Material.AIR || block.getRelative(BlockFace.UP).getType() != Material.AIR) {
+						tp = new Location(world, l.getX(), l.getWorld().getHighestBlockYAt(l.getBlockX(), l.getBlockZ()),
+								l.getZ());
+					}
+					p.teleport(tp);
 				}
-				p.teleport(tp);
 			}
 		}
 		// Actually reset
@@ -316,7 +341,7 @@ public class Mine implements ConfigurationSerializable {
 						if(world.getBlockTypeIdAt(x, y, z) == 65 & ignoreLadders) {
 							continue;
 						}
-						
+
 						if (y == maxY && surface != null) {
 							world.getBlockAt(x, y, z).setTypeIdAndData(surface.getBlockId(), surface.getData(), false);
 							continue;
@@ -334,7 +359,7 @@ public class Mine implements ConfigurationSerializable {
 			}
 		}
 	}
-	
+
 	public void cron() {
 		if (resetDelay == 0) {
 			return;
@@ -356,25 +381,25 @@ public class Mine implements ConfigurationSerializable {
 			}
 		}
 	}
-	
+
 	public static class CompositionEntry {
 		private SerializableBlock	block;
 		private double				chance;
-		
+
 		public CompositionEntry(SerializableBlock block, double chance) {
 			this.block = block;
 			this.chance = chance;
 		}
-		
+
 		public SerializableBlock getBlock() {
 			return block;
 		}
-		
+
 		public double getChance() {
 			return chance;
 		}
 	}
-	
+
 	public static ArrayList<CompositionEntry> mapComposition(Map<SerializableBlock, Double> compositionIn) {
 		ArrayList<CompositionEntry> probabilityMap = new ArrayList<CompositionEntry>();
 		Map<SerializableBlock, Double> composition = new HashMap<SerializableBlock, Double>(compositionIn);
@@ -395,22 +420,22 @@ public class Mine implements ConfigurationSerializable {
 		}
 		return probabilityMap;
 	}
-	
+
 	public void teleport(Player player) {
 		Location max = new Location(world, Math.max(this.maxX, this.minX), this.maxY, Math.max(this.maxZ, this.minZ));
 		Location min = new Location(world, Math.min(this.maxX, this.minX), this.minY, Math.min(this.maxZ, this.minZ));
-		
+
 		Location location = max.add(min).multiply(0.5);
 		Block block = location.getBlock();
-		
+
 		if (block.getType() != Material.AIR || block.getRelative(BlockFace.UP).getType() != Material.AIR) {
 			location = new Location(world, location.getX(), location.getWorld().getHighestBlockYAt(
 					location.getBlockX(), location.getBlockZ()), location.getZ());
 		}
-		
+
 		player.teleport(location);
 	}
-	
+
 	public void redefine(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, World world) {
 		this.minX = minX;
 		this.minY = minY;
@@ -420,5 +445,5 @@ public class Mine implements ConfigurationSerializable {
 		this.maxZ = maxZ;
 		this.world = world;
 	}
-	
+
 }

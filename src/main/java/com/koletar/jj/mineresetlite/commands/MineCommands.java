@@ -619,4 +619,43 @@ public class MineCommands {
 		
 		mine.teleport((Player) sender);
 	}
+	
+	@Command(aliases = { "settp", "stp" }, description = "Set the mine's reset teleportation point", help = {
+			"Run this command to set your the mine's telportation point to your location.",
+			"Use /mrl removetp <mine name> to remove the teleportation point."}, usage = "<mine name>", permissions = {
+			"mineresetlite.mine.settp"}, min = 1, max = -1, onlyPlayers = true)
+	public void setTPPos(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
+		Player player = (Player) sender;
+		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
+		if (mines.length > 1) {
+			sender.sendMessage(phrase("tooManyMines"));
+			return;
+		} else if (mines.length == 0) {
+			sender.sendMessage(phrase("noMinesMatched"));
+			return;
+		}
+		mines[0].setTpPos(player.getLocation());
+		sender.sendMessage(phrase("tpPosSet", mines[0]));
+		return;
+	}
+	
+	@Command(aliases = { "removetp", "rtp" }, description = "Remove the mine's reset teleportation point", help = {
+			"Run this command to set your the mine's telportation point to your location.",
+			"Use /mrl settp -r to remove the teleportation point.",
+			"use /mrl settp x y z to set it to a specific point."}, usage = "<mine name>", permissions = {
+			"mineresetlite.mine.removetp"}, min = 1, max = -1, onlyPlayers = true)
+	public void removeTPPos(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
+		Player player = (Player) sender;
+		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
+		if (mines.length > 1) {
+			sender.sendMessage(phrase("tooManyMines"));
+			return;
+		} else if (mines.length == 0) {
+			sender.sendMessage(phrase("noMinesMatched"));
+			return;
+		}
+		mines[0].setTpPos(new Location(player.getWorld(), 0, -1, 0));
+		sender.sendMessage(phrase("tpPosRemove", mines[0]));
+		return;
+	}
 }
