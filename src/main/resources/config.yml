@@ -1,0 +1,5 @@
+#Set this value to false to disable the checking of updates
+check-for-updates: true
+
+#Set this value to false to disable console logging of mine resets.
+consoleLogMineReset: true
