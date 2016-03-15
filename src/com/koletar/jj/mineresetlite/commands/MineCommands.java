@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.koletar.jj.mineresetlite.Phrases.phrase;
 
@@ -56,7 +57,7 @@ public class MineCommands {
         Player player = (Player) sender;
         if (args.length == 0) {
             //Use block being looked at
-            point1.put(player, player.getTargetBlock(null, 100).getLocation());
+            point1.put(player, player.getTargetBlock((Set) null, 100).getLocation());
             player.sendMessage(phrase("firstPointSet"));
             return;
         } else if (args[0].equalsIgnoreCase("-feet")) {
@@ -80,7 +81,7 @@ public class MineCommands {
         Player player = (Player) sender;
         if (args.length == 0) {
             //Use block being looked at
-            point2.put(player, player.getTargetBlock(null, 100).getLocation());
+            point2.put(player, player.getTargetBlock((Set) null, 100).getLocation());
             player.sendMessage(phrase("secondPointSet"));
             return;
         } else if (args[0].equalsIgnoreCase("-feet")) {
