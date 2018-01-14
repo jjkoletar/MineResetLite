@@ -221,6 +221,14 @@ public class Mine implements ConfigurationSerializable {
             && (l.getY() >= minY && l.getY() <= maxY)
             && (l.getZ() >= minZ && l.getZ() <= maxZ);
     }
+    
+    public boolean isInside(Block b) {
+        Location l = b.getLocation();
+        return l.getWorld().equals(world)
+            && (l.getX() >= minX && l.getX() <= maxX)
+            && (l.getY() >= minY && l.getY() <= maxY)
+            && (l.getZ() >= minZ && l.getZ() <= maxZ);
+    }
 
     public void reset() {
         //Get probability map
