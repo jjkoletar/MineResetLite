@@ -18,8 +18,38 @@ public class Config {
     private static boolean broadcastNearbyOnly = false;
     private static boolean checkForUpdates = true;
     private static String locale = "en";
-    
     private static int resetDelay = 20; // in ticks.
+    private static int resetBlocksPerStep = 256;
+    private static int resetTaskInterval = 3; // in ticks.
+    private static boolean mineResetAtStart = false;
+
+    public static int getResetBlocksPerStep() {
+        return resetBlocksPerStep;
+    }
+    public static void setResetBlocksPerStep(int resetBlocksPerStep) {
+        Config.resetBlocksPerStep = resetBlocksPerStep;
+    }
+    private static void writeResetBlocksPerStep(BufferedWriter out) throws IOException {
+        out.write("# This option defines the number of blocks to be reset at the time.");
+        out.newLine();
+        out.write("reset-blocks-per-step: 256");
+        out.newLine();
+    }
+
+    public static int getResetTaskInterval() {
+        return resetTaskInterval;
+    }
+
+    public static void setResetTaskInterval(int resetTaskInterval) {
+        Config.resetTaskInterval = resetTaskInterval;
+    }
+    private static void writeResetTaskInterval(BufferedWriter out) throws IOException {
+        out.write("# This option defines the delay (in ticks , 20 ticks = 1 sec) between the gradual reset steps.");
+        out.newLine();
+        out.write("reset-task-interval: 3");
+        out.newLine();
+    }
+
     public static int getResetDelay() {
         return resetDelay;
     }
@@ -29,7 +59,7 @@ public class Config {
     }
     
     private static void writeResetDelay(BufferedWriter out) throws IOException {
-        out.write("# This option defines the delay (in ticks : 20 ticks = 1 sec) between the issue of reset command");
+        out.write("# This option defines the delay (in ticks , 20 ticks = 1 sec) between the issue of reset command");
         out.newLine();
         out.write("# and the actual execution of the reset action.  If you have large explosions in the mine, you might need to ");
         out.newLine();
@@ -133,13 +163,29 @@ public class Config {
         out.write("# This option specifies the visual effect played when a player mines a lucky block.");
         out.newLine();
         out.write("lucky_block_effect: MOBSPAWNER_FLAMES");
+        out.newLine();
     }
     private static void writeLuckySound(BufferedWriter out) throws IOException {
         out.write("# This option specifies the sound effect played when a player mines a lucky block.");
         out.newLine();
         out.write("lucky_block_sound: AMBIENCE_THUNDER");
+        out.newLine();
     }
-    
+
+    public static boolean getMineResetAtStart() {
+        return Config.mineResetAtStart;
+    }
+    private static void setMineResetAtStart(boolean mineResetAtStart) {
+        Config.mineResetAtStart = mineResetAtStart;
+    }
+
+    private static void writeMineResetAtStart(BufferedWriter out) throws IOException {
+        out.write("# When true, all mines are reset at the server startup.");
+        out.newLine();
+        out.write("mine-reset-at-start: true");
+        out.newLine();
+    }
+
 
     static void initConfig(File dataFolder) throws IOException {
         if (!dataFolder.exists()) {
@@ -187,6 +233,17 @@ public class Config {
         } else {
             Config.writeResetDelay(out);
         }
+        if (config.contains("reset-task-interval")) {
+            Config.setResetTaskInterval(config.getInt("reset-task-interval", 5));
+        } else {
+            Config.writeResetTaskInterval(out);
+        }
+        if (config.contains("reset-blocks-per-step")) {
+            Config.setResetBlocksPerStep(config.getInt("reset-blocks-per-step", 256));
+        } else {
+            Config.writeResetBlocksPerStep(out);
+        }
+
         if (config.contains("lucky_block_effect")) {
             try {
                 Config.setLuckyEffect(Effect.valueOf(config.getString("lucky_block_effect", "MOBSPAWNER_FLAMES")));
@@ -204,6 +261,11 @@ public class Config {
             }
         } else {
             Config.writeLuckySound(out);
+        }
+        if (config.contains("mine-reset-at-start")) {
+            Config.setMineResetAtStart(config.getBoolean("mine-reset-at-start", true));
+        } else {
+            Config.writeMineResetAtStart(out);
         }
         out.close();
     }

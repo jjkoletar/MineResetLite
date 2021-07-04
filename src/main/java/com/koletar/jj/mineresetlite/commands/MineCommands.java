@@ -22,13 +22,13 @@ public class MineCommands {
 	private MineResetLite plugin;
 	private Map<Player, Location> point1;
 	private Map<Player, Location> point2;
-	
+
 	public MineCommands(MineResetLite plugin) {
 		this.plugin = plugin;
 		point1 = new HashMap<>();
 		point2 = new HashMap<>();
 	}
-	
+
 	@Command(aliases = {"list", "l"},
 			description = "List the names of all Mines",
 			permissions = {"mineresetlite.mine.list"},
@@ -37,7 +37,7 @@ public class MineCommands {
 	public void listMines(CommandSender sender, String[] args) {
 		sender.sendMessage(phrase("mineList", StringTools.buildList(plugin.mines, "&c", "&d, ")));
 	}
-	
+
 	@Command(aliases = {"pos1", "p1"},
 			description = "Change your first selection point",
 			help = {"Run this command to set your first selection point to the block you are looking at.",
@@ -61,7 +61,7 @@ public class MineCommands {
 		//Args weren't empty or -feet, bad args
 		throw new InvalidCommandArgumentsException();
 	}
-	
+
 	@Command(aliases = {"pos2", "p2"},
 			description = "Change your first selection point",
 			help = {"Run this command to set your second selection point to the block you are looking at.",
@@ -85,7 +85,7 @@ public class MineCommands {
 		//Args weren't empty or -feet, bad args
 		throw new InvalidCommandArgumentsException();
 	}
-	
+
 	@Command(aliases = {"create", "save"},
 			description = "Create a mine from either your WorldEdit selection or by manually specifying the points",
 			help = {"Provided you have a selection made via either WorldEdit or selecting the points using MRL,",
@@ -108,14 +108,18 @@ public class MineCommands {
 			}
 			p1 = point1.get(player).toVector();
 			p2 = point2.get(player).toVector();
+			//System.out.println("point1 : " + p1);
+			//System.out.println("point2 : " + p2);
 		}
 		Object[] selections = WorldGuardUtil.getSelection(plugin, player);
-		if (selections != null) {
+		if (selections != null && selections[1] != null && selections[2] != null) {
 			world = (World) selections[0];
 			p1 = (Vector) selections[1];
 			p2 = (Vector) selections[2];
+			//System.out.println("WE point1 : " + p1);
+			//System.out.println("WE point2 : " + p2);
 		}
-		
+
 		if (p1 == null) {
 			player.sendMessage(phrase("emptySelection"));
 			return;
@@ -151,7 +155,7 @@ public class MineCommands {
 		player.sendMessage(phrase("mineCreated", newMine));
 		plugin.buffSave();
 	}
-	
+
 	@Command(aliases = {"info", "i"},
 			description = "List information about a mine",
 			usage = "<mine name>",
@@ -193,7 +197,7 @@ public class MineCommands {
 			sender.sendMessage(phrase("mineInfoFillMode"));
 		}
 	}
-	
+
 	private boolean invalidMInes(CommandSender sender, Mine[] mines) {
 		if (mines.length > 1) {
 			sender.sendMessage(phrase("tooManyMines", plugin.toString(mines)));
@@ -204,7 +208,7 @@ public class MineCommands {
 		}
 		return false;
 	}
-	
+
 	@Command(aliases = {"set", "add", "+"},
 			description = "Set the percentage of a block in the mine",
 			help = {"This command will always overwrite the current percentage for the specified block,",
@@ -280,7 +284,7 @@ public class MineCommands {
 		sender.sendMessage(phrase("mineCompositionSet", mines[0], percentage * 100, block, MathUtil.round((1 - mines[0].getCompositionTotal()) * 100, 4)));
 		plugin.buffSave();
 	}
-	
+
 	@Command(aliases = {"unset", "remove", "-"},
 			description = "Remove a block from the composition of a mine",
 			usage = "<mine name> <block>:(data)",
@@ -321,7 +325,7 @@ public class MineCommands {
 		sender.sendMessage(phrase("blockNotInMine", mines[0], block));
 		plugin.buffSave();
 	}
-	
+
 	@Command(aliases = {"reset", "r"},
 			description = "Reset a mine",
 			help = {"If you supply the -s argument, the mine will silently reset. Resets triggered via",
@@ -342,7 +346,7 @@ public class MineCommands {
 			mines[0].reset();
 		}
 	}
-	
+
 	@Command(aliases = {"flag", "f"},
 			description = "Set various properties of a mine, including automatic resets",
 			help = {"Available flags:",
@@ -385,10 +389,21 @@ public class MineCommands {
 			String[] bits = value.split(",");
 			List<Integer> warnings = mines[0].getResetWarnings();
 			List<Integer> oldList = new LinkedList<>(warnings);
+
+			List<Integer> warningsLastMinute = mines[0].getResetWarningsLastMinute();
+			List<Integer> oldListLastMinute = new LinkedList<>(warningsLastMinute);
 			warnings.clear();
+			warningsLastMinute.clear();
+
 			for (String bit : bits) {
 				try {
-					warnings.add(Integer.valueOf(bit));
+					//System.out.println("bit : " + bit);
+					if (bit.toLowerCase().endsWith("s")) {
+						bit = bit.toLowerCase().replace("s", "");
+						warningsLastMinute.add(Integer.valueOf(bit));
+					} else {
+						warnings.add(Integer.valueOf(bit));
+					}
 				} catch (NumberFormatException nfe) {
 					sender.sendMessage(phrase("badWarningList"));
 					return;
@@ -396,19 +411,33 @@ public class MineCommands {
 			}
 			//Validate warnings
 			for (Integer warning : warnings) {
-				if (warning >= mines[0].getResetDelay()) {
+				if ((mines[0].getResetDelay() > 0 && warning >= mines[0].getResetDelay())
+				|| (mines[0].getResetPercent() > 0 && warning < mines[0].getResetPercent() * 100) ) {
 					sender.sendMessage(phrase("badWarningList"));
 					mines[0].setResetWarnings(oldList);
+					mines[0].setResetWarnings(oldListLastMinute);
 					return;
 				}
 			}
+
+			for (Integer warning : warningsLastMinute) {
+				if (warning >= 60) {
+					sender.sendMessage(phrase("badWarningList"));
+					mines[0].setResetWarnings(oldList);
+					mines[0].setResetWarnings(oldListLastMinute);
+					return;
+				}
+			}
+
 			if (warnings.contains(0) && warnings.size() == 1) {
 				warnings.clear();
+				warningsLastMinute.clear();
 				sender.sendMessage(phrase("warningListCleared", mines[0]));
 				return;
-			} else if (warnings.contains(0)) {
+			} else if (warnings.contains(0) || warningsLastMinute.contains(0)) {
 				sender.sendMessage(phrase("badWarningList"));
 				mines[0].setResetWarnings(oldList);
+				mines[0].setResetWarningsLastMinute(oldListLastMinute);
 				return;
 			}
 			sender.sendMessage(phrase("warningListSet", mines[0]));
@@ -490,7 +519,7 @@ public class MineCommands {
 			}
 			percentage = percentage / 100; //Make it a programmatic percentage
 			mines[0].setResetPercent(percentage);
-			
+
 			if (percentage < 0) {
 				sender.sendMessage(phrase("resetDelayCleared", mines[0]));
 			} else {
@@ -501,7 +530,7 @@ public class MineCommands {
 		}
 		sender.sendMessage(phrase("unknownFlag"));
 	}
-	
+
 	@Command(aliases = {"erase"},
 			description = "Completely erase a mine",
 			help = {"Like most erasures of data, be sure you don't need to recover anything from this mine before you delete it."},
@@ -514,7 +543,7 @@ public class MineCommands {
 		plugin.eraseMine(mines[0]);
 		sender.sendMessage(phrase("mineErased", mines[0]));
 	}
-	
+
 	@Command(aliases = {"reschedule"},
 			description = "Synchronize all automatic mine resets",
 			help = {"This command will set the 'start time' of the mine resets to the same point."},
@@ -528,25 +557,25 @@ public class MineCommands {
 		plugin.buffSave();
 		sender.sendMessage(phrase("rescheduled"));
 	}
-	
+
 	@Command(aliases = {"tp", "teleport"}, description = "Teleport to the specified mine", help = {"This command will teleport you to the center of the specified mine or at the teleport point if it is specified."}, usage = "<mine name>", permissions = {"mineresetlite.mine.tp"}, min = 1, max = -1, onlyPlayers = true)
 	public void teleport(CommandSender sender, String[] args) {
 		Mine mine = null;
-		
+
 		for (Mine aMine : plugin.mines) {
 			if (aMine.getName().equalsIgnoreCase(args[0])) {
 				mine = aMine;
 			}
 		}
-		
+
 		if (mine == null) {
 			sender.sendMessage(phrase("noMinesMatched"));
 			return;
 		}
-		
+
 		mine.teleport((Player) sender);
 	}
-	
+
 	@Command(aliases = {"settp", "stp"}, description = "Sets the specified mine's spawn point", help = {"This command will set the specified mine's reset spawn point to where you're standing.", "Use /mrl removetp <mine name> to remove the mine's spawn point."}, usage = "<mine name>", permissions = {"mineresetlite.mine.settp"}, min = 1, max = -1, onlyPlayers = true)
 	public void setTP(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Player player = (Player) sender;
@@ -556,7 +585,7 @@ public class MineCommands {
 		plugin.buffSave();
 		sender.sendMessage(phrase("tpSet", mines[0]));
 	}
-	
+
 	@Command(aliases = {"removetp", "rtp"}, description = "Removes the specified mine's spawn point", help = {"This comamnd will remove the specified mine's reset spawn point.", "Use /mrl removetp to remove the spawn point.", "use /mrl settp to set it to where you're standing."}, usage = "<mine name>", permissions = {"mineresetlite.mine.removetp"}, min = 1, max = -1, onlyPlayers = true)
 	public void removeTP(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Player player = (Player) sender;
@@ -566,7 +595,7 @@ public class MineCommands {
 		plugin.buffSave();
 		sender.sendMessage(phrase("tpRemove", mines[0]));
 	}
-	
+
 	@Command(aliases = {"addpotion", "addpot"}, description = "Adds the specified potion to the mine", help = {"This command will saddthe specified potion to the mine where you're standing.", "Use /mrl removepot <mine name> <potionname> to remove the specified potion effect from the mine."}, usage = "<mine name> <potionname:amplifier>", permissions = {"mineresetlite.mine.addpotion"}, min = 1, max = -1, onlyPlayers = true)
 	public void addPot(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
@@ -576,7 +605,7 @@ public class MineCommands {
 			sender.sendMessage(phrase("potionAdded", args[args.length - 1], mines[0]));
 		}
 	}
-	
+
 	@Command(aliases = {"removepotion", "removepot"}, description = "Removes the specified potion from the mine", help = {"This comamnd will remove the specified potion from the mine.", "Use /mrl removepot <potionname> to remove the potion.", "Use /mrl addpot <mine name> <potionname:amplifier> to add the specified potion effect to the mine."}, usage = "<mine name> <potionname>", permissions = {"mineresetlite.mine.removepotion"}, min = 1, max = -1, onlyPlayers = true)
 	public void removePot(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
@@ -585,7 +614,7 @@ public class MineCommands {
 		plugin.buffSave();
 		sender.sendMessage(phrase("potionRemoved", args[args.length - 1], mines[0]));
 	}
-	
+
 	@Command(aliases = {"redefine", "rd"},
 			description = "Redefine a mine's boundaries from either your WorldEdit selection or by manually specifying the points",
 			help = {"Provided you have a selection made via either WorldEdit or selecting the points using MRL,"},
@@ -606,14 +635,14 @@ public class MineCommands {
 			p1 = point1.get(player).toVector();
 			p2 = point2.get(player).toVector();
 		}
-		
+
 		Object[] selections = WorldGuardUtil.getSelection(plugin, player);
 		if (selections != null) {
 			world = (World) selections[0];
 			p1 = (Vector) selections[1];
 			p2 = (Vector) selections[2];
 		}
-		
+
 		if (p1 == null) {
 			player.sendMessage(phrase("emptySelection"));
 			return;
@@ -626,7 +655,7 @@ public class MineCommands {
 			player.sendMessage(phrase("noMinesMatched"));
 			return;
 		}
-		
+
 		//Sort coordinates
 		if (p1.getX() > p2.getX()) {
 			//Swap
@@ -648,7 +677,7 @@ public class MineCommands {
 		player.sendMessage(Phrases.phrase("mineRedefined"));
 		plugin.buffSave();
 	}
-	
+
 	@Command(aliases = {"setstruct", "addstruct", "+"},
 			description = "Set the structure block for the mine",
 			help = {"This command will add the specified block as the strcuture material types,",
@@ -657,10 +686,10 @@ public class MineCommands {
 			permissions = {"mineresetlite.mine.composition"},
 			min = 2, max = -1, onlyPlayers = false)
 	public void setStructure(CommandSender sender, String[] args) {
-		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 2));
+		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
 		if (invalidMInes(sender, mines)) return;
 		//Match material
-		String[] bits = args[args.length - 2].split(":");
+		String[] bits = args[args.length - 1].split(":");
 		Material m = plugin.matchMaterial(bits[0]);
 		if (m == null) {
 			sender.sendMessage(phrase("unknownBlock"));
@@ -684,7 +713,7 @@ public class MineCommands {
 		sender.sendMessage(phrase("mineStructureSet", mines[0], block));
 		plugin.buffSave();
 	}
-	
+
 	@Command(aliases = {"unsetstruct", "removestruct", "-"},
 			description = "Remove a block from the strucutre material list.",
 			usage = "<mine name> <block>:(data)",
@@ -715,7 +744,7 @@ public class MineCommands {
 		}
 		//Does the mine contain this block?
 		SerializableBlock block = new SerializableBlock(MaterialUtil.getId(m), data);
-		
+
 		for (SerializableBlock entry : mines[0].getStructure()) {
 			if (entry.equals(block)) {
 				mines[0].getStructure().remove(entry);
@@ -726,7 +755,7 @@ public class MineCommands {
 		sender.sendMessage(phrase("blockNotInMine", mines[0], block));
 		plugin.buffSave();
 	}
-	
+
 	@Command(aliases = {"setlucky"}, description = "Sets the number of lucky blocks in the specified mine.", help = {"This command will set the number of lucky blocks in the specified mine."}, usage = "<mine name> <a_number_of_lucky_blocks>", permissions = {"mineresetlite.mine.setlucky"}, min = 1, max = -1, onlyPlayers = true)
 	public void setLucky(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
@@ -744,7 +773,7 @@ public class MineCommands {
 			throw new InvalidCommandArgumentsException();
 		}
 	}
-	
+
 	@Command(aliases = {"makelucky"}, description = "Makes the n-th mined block as a lucky block in the specified mine.", help = {"This command will make the n-th mined block in the specified mine as a lucky block."}, usage = "<mine name> <a_number_of_lucky_block>", permissions = {"mineresetlite.mine.makelucky"}, min = 1, max = -1, onlyPlayers = true)
 	public void makeLucky(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
