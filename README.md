@@ -1,6 +1,6 @@
-[MineResetLite](https://www.spigotmc.org/resources/mineresetlite-with-worldedit-v6-v7-tokenenchant-explosive-support.61713/)
+[MineResetLite](https://polymart.org/resource/mineresetlite.137)
 =============
 
 Lightweight implementation for automatic mine resets.
 
-You can get the latest build from [here](https://www.spigotmc.org/resources/mineresetlite-with-worldedit-v6-v7-tokenenchant-explosive-support.61713/)
+You can get the latest build from [here](https://polymart.org/resource/mineresetlite.137)
