@@ -1,9 +1,10 @@
 name: MineResetLite
-version: $version$
+version: ${project.version}
+api-version: 1.13
 main: com.koletar.jj.mineresetlite.MineResetLite
-author: jjkoletar
+authors: [jjkoletar, vk2gpz]
 description: A lightweight solution for Mine management.
-softdepend: [WorldEdit, Multiverse-Core]
+softdepend: [WorldEdit, Multiverse-Core, ReWorld, TokenEnchant]
 commands:
   mineresetlite:
     aliases: [mrl, mr, mine, minereset]
