@@ -1,0 +1,2 @@
+#Set this value to false to disable the checking of updates
+check-for-updates: true
