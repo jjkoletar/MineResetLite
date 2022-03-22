@@ -163,7 +163,7 @@ public class MineCommands {
 			min = 1, max = -1, onlyPlayers = false)
 	public void mineInfo(CommandSender sender, String[] args) {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
-		if (invalidMInes(sender, mines)) return;
+		if (invalidMines(sender, mines)) return;
 		sender.sendMessage(phrase("mineInfoName", mines[0]));
 		sender.sendMessage(phrase("mineInfoWorld", mines[0].getWorld()));
 		//Build composition list
@@ -198,7 +198,7 @@ public class MineCommands {
 		}
 	}
 
-	private boolean invalidMInes(CommandSender sender, Mine[] mines) {
+	private boolean invalidMines(CommandSender sender, Mine[] mines) {
 		if (mines.length > 1) {
 			sender.sendMessage(phrase("tooManyMines", plugin.toString(mines)));
 			return true;
@@ -219,7 +219,7 @@ public class MineCommands {
 			min = 3, max = -1, onlyPlayers = false)
 	public void setComposition(CommandSender sender, String[] args) {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 2));
-		if (invalidMInes(sender, mines)) return;
+		if (invalidMines(sender, mines)) return;
 		//Match material
 		String[] bits = args[args.length - 2].split(":");
 		Material m = plugin.matchMaterial(bits[0]);
@@ -292,7 +292,7 @@ public class MineCommands {
 			min = 2, max = -1, onlyPlayers = false)
 	public void unsetComposition(CommandSender sender, String[] args) {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
-		if (invalidMInes(sender, mines)) return;
+		if (invalidMines(sender, mines)) return;
 		//Match material
 		String[] bits = args[args.length - 1].split(":");
 		Material m = plugin.matchMaterial(bits[0]);
@@ -337,13 +337,15 @@ public class MineCommands {
 			min = 1, max = -1, onlyPlayers = false)
 	public void resetMine(CommandSender sender, String[] args) {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args).replace(" -s", ""));
-		if (invalidMInes(sender, mines)) return;
-		if (args[args.length - 1].equalsIgnoreCase("-s")) {
-			//Silent reset
-			mines[0].reset();
-		} else {
-			MineResetLite.broadcast(phrase("mineResetBroadcast", mines[0], sender), mines[0]);
-			mines[0].reset();
+		//if (invalidMines(sender, mines)) return;
+		for (Mine mine : mines) {
+			if (args[args.length - 1].equalsIgnoreCase("-s")) {
+				//Silent reset
+				mine.reset();
+			} else {
+				MineResetLite.broadcast(phrase("mineResetBroadcast", mine, sender), mine);
+				mine.reset();
+			}
 		}
 	}
 
@@ -362,171 +364,173 @@ public class MineCommands {
 			min = 3, max = -1, onlyPlayers = false)
 	public void flag(CommandSender sender, String[] args) {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 2));
-		if (invalidMInes(sender, mines)) return;
+		//if (invalidMines(sender, mines)) return;
 		String setting = args[args.length - 2];
 		String value = args[args.length - 1];
-		if (setting.equalsIgnoreCase("resetEvery") || setting.equalsIgnoreCase("resetDelay")) {
-			int delay;
-			try {
-				delay = Integer.valueOf(value);
-			} catch (NumberFormatException nfe) {
-				sender.sendMessage(phrase("badResetDelay"));
-				return;
-			}
-			if (delay < 0) {
-				sender.sendMessage(phrase("badResetDelay"));
-				return;
-			}
-			mines[0].setResetDelay(delay);
-			if (delay == 0) {
-				sender.sendMessage(phrase("resetDelayCleared", mines[0]));
-			} else {
-				sender.sendMessage(phrase("resetDelaySet", mines[0], delay));
-			}
-			plugin.buffSave();
-			return;
-		} else if (setting.equalsIgnoreCase("resetWarnings") || setting.equalsIgnoreCase("resetWarning")) {
-			String[] bits = value.split(",");
-			List<Integer> warnings = mines[0].getResetWarnings();
-			List<Integer> oldList = new LinkedList<>(warnings);
-
-			List<Integer> warningsLastMinute = mines[0].getResetWarningsLastMinute();
-			List<Integer> oldListLastMinute = new LinkedList<>(warningsLastMinute);
-			warnings.clear();
-			warningsLastMinute.clear();
-
-			for (String bit : bits) {
+		for (Mine mine: mines) {
+			if (setting.equalsIgnoreCase("resetEvery") || setting.equalsIgnoreCase("resetDelay")) {
+				int delay;
 				try {
-					//System.out.println("bit : " + bit);
-					if (bit.toLowerCase().endsWith("s")) {
-						bit = bit.toLowerCase().replace("s", "");
-						warningsLastMinute.add(Integer.valueOf(bit));
-					} else {
-						warnings.add(Integer.valueOf(bit));
-					}
+					delay = Integer.valueOf(value);
 				} catch (NumberFormatException nfe) {
-					sender.sendMessage(phrase("badWarningList"));
+					sender.sendMessage(phrase("badResetDelay"));
 					return;
 				}
-			}
-			//Validate warnings
-			for (Integer warning : warnings) {
-				if ((mines[0].getResetDelay() > 0 && warning >= mines[0].getResetDelay())
-				|| (mines[0].getResetPercent() > 0 && warning < mines[0].getResetPercent() * 100) ) {
-					sender.sendMessage(phrase("badWarningList"));
-					mines[0].setResetWarnings(oldList);
-					mines[0].setResetWarnings(oldListLastMinute);
+				if (delay < 0) {
+					sender.sendMessage(phrase("badResetDelay"));
 					return;
 				}
-			}
+				mine.setResetDelay(delay);
+				if (delay == 0) {
+					sender.sendMessage(phrase("resetDelayCleared", mine));
+				} else {
+					sender.sendMessage(phrase("resetDelaySet", mine, delay));
+				}
+				plugin.buffSave();
+				return;
+			} else if (setting.equalsIgnoreCase("resetWarnings") || setting.equalsIgnoreCase("resetWarning")) {
+				String[] bits = value.split(",");
+				List<Integer> warnings = mine.getResetWarnings();
+				List<Integer> oldList = new LinkedList<>(warnings);
 
-			for (Integer warning : warningsLastMinute) {
-				if (warning >= 60) {
-					sender.sendMessage(phrase("badWarningList"));
-					mines[0].setResetWarnings(oldList);
-					mines[0].setResetWarnings(oldListLastMinute);
-					return;
-				}
-			}
-
-			if (warnings.contains(0) && warnings.size() == 1) {
+				List<Integer> warningsLastMinute = mine.getResetWarningsLastMinute();
+				List<Integer> oldListLastMinute = new LinkedList<>(warningsLastMinute);
 				warnings.clear();
 				warningsLastMinute.clear();
-				sender.sendMessage(phrase("warningListCleared", mines[0]));
+
+				for (String bit : bits) {
+					try {
+						//System.out.println("bit : " + bit);
+						if (bit.toLowerCase().endsWith("s")) {
+							bit = bit.toLowerCase().replace("s", "");
+							warningsLastMinute.add(Integer.valueOf(bit));
+						} else {
+							warnings.add(Integer.valueOf(bit));
+						}
+					} catch (NumberFormatException nfe) {
+						sender.sendMessage(phrase("badWarningList"));
+						return;
+					}
+				}
+				//Validate warnings
+				for (Integer warning : warnings) {
+					if ((mine.getResetDelay() > 0 && warning >= mine.getResetDelay())
+							|| (mine.getResetPercent() > 0 && warning < mine.getResetPercent() * 100)) {
+						sender.sendMessage(phrase("badWarningList"));
+						mine.setResetWarnings(oldList);
+						mine.setResetWarnings(oldListLastMinute);
+						return;
+					}
+				}
+
+				for (Integer warning : warningsLastMinute) {
+					if (warning >= 60) {
+						sender.sendMessage(phrase("badWarningList"));
+						mine.setResetWarnings(oldList);
+						mine.setResetWarnings(oldListLastMinute);
+						return;
+					}
+				}
+
+				if (warnings.contains(0) && warnings.size() == 1) {
+					warnings.clear();
+					warningsLastMinute.clear();
+					sender.sendMessage(phrase("warningListCleared", mine));
+					return;
+				} else if (warnings.contains(0) || warningsLastMinute.contains(0)) {
+					sender.sendMessage(phrase("badWarningList"));
+					mine.setResetWarnings(oldList);
+					mine.setResetWarningsLastMinute(oldListLastMinute);
+					return;
+				}
+				sender.sendMessage(phrase("warningListSet", mine));
+				plugin.buffSave();
 				return;
-			} else if (warnings.contains(0) || warningsLastMinute.contains(0)) {
-				sender.sendMessage(phrase("badWarningList"));
-				mines[0].setResetWarnings(oldList);
-				mines[0].setResetWarningsLastMinute(oldListLastMinute);
-				return;
-			}
-			sender.sendMessage(phrase("warningListSet", mines[0]));
-			plugin.buffSave();
-			return;
-		} else if (setting.equalsIgnoreCase("surface")) {
-			//Match material
-			String[] bits = value.split(":");
-			Material m = plugin.matchMaterial(bits[0]);
-			if (m == null) {
-				sender.sendMessage(phrase("unknownBlock"));
-				return;
-			}
-			if (!m.isBlock()) {
-				sender.sendMessage(phrase("notABlock"));
-				return;
-			}
-			byte data = 0;
-			if (bits.length == 2) {
-				try {
-					data = Byte.valueOf(bits[1]);
-				} catch (NumberFormatException nfe) {
+			} else if (setting.equalsIgnoreCase("surface")) {
+				//Match material
+				String[] bits = value.split(":");
+				Material m = plugin.matchMaterial(bits[0]);
+				if (m == null) {
 					sender.sendMessage(phrase("unknownBlock"));
 					return;
 				}
-			}
-			if (m.equals(Material.AIR)) {
-				mines[0].setSurface(null);
-				sender.sendMessage(phrase("surfaceBlockCleared", mines[0]));
+				if (!m.isBlock()) {
+					sender.sendMessage(phrase("notABlock"));
+					return;
+				}
+				byte data = 0;
+				if (bits.length == 2) {
+					try {
+						data = Byte.valueOf(bits[1]);
+					} catch (NumberFormatException nfe) {
+						sender.sendMessage(phrase("unknownBlock"));
+						return;
+					}
+				}
+				if (m.equals(Material.AIR)) {
+					mine.setSurface(null);
+					sender.sendMessage(phrase("surfaceBlockCleared", mine));
+					plugin.buffSave();
+					return;
+				}
+				SerializableBlock block = new SerializableBlock(MaterialUtil.getId(m), data);
+				mine.setSurface(block);
+				sender.sendMessage(phrase("surfaceBlockSet", mine));
 				plugin.buffSave();
 				return;
-			}
-			SerializableBlock block = new SerializableBlock(MaterialUtil.getId(m), data);
-			mines[0].setSurface(block);
-			sender.sendMessage(phrase("surfaceBlockSet", mines[0]));
-			plugin.buffSave();
-			return;
-		} else if (setting.equalsIgnoreCase("fill") || setting.equalsIgnoreCase("fillMode")) {
-			//Match true or false
-			if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("enabled")) {
-				mines[0].setFillMode(true);
-				sender.sendMessage(phrase("fillModeEnabled"));
-				plugin.buffSave();
-				return;
-			} else if (value.equalsIgnoreCase("false") || value.equalsIgnoreCase("no") || value.equalsIgnoreCase("disabled")) {
-				mines[0].setFillMode(false);
-				sender.sendMessage(phrase("fillModeDisabled"));
-				plugin.buffSave();
-				return;
-			}
-			sender.sendMessage(phrase("invalidFillMode"));
-		} else if (setting.equalsIgnoreCase("isSilent") || setting.equalsIgnoreCase("silent") || setting.equalsIgnoreCase("silence")) {
-			if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("enabled")) {
-				mines[0].setSilence(true);
-				sender.sendMessage(phrase("mineIsNowSilent", mines[0]));
-				plugin.buffSave();
-				return;
-			} else if (value.equalsIgnoreCase("false") || value.equalsIgnoreCase("no") || value.equalsIgnoreCase("disabled")) {
-				mines[0].setSilence(false);
-				sender.sendMessage(phrase("mineIsNoLongerSilent", mines[0]));
-				plugin.buffSave();
-				return;
-			}
-			sender.sendMessage(phrase("badBoolean"));
-		} else if (setting.equalsIgnoreCase("resetPercent")) {
-			StringBuilder psb = new StringBuilder(value);
-			psb.deleteCharAt(psb.length() - 1);
-			double percentage;
-			try {
-				percentage = Double.valueOf(psb.toString());
-			} catch (NumberFormatException nfe) {
-				sender.sendMessage(phrase("badPercentage"));
-				return;
-			}
-			// < 0 is used to cancel percent reset setting.
-			if (percentage > 100) {// || percentage <= 0) {
-				sender.sendMessage(phrase("badPercentage"));
-				return;
-			}
-			percentage = percentage / 100; //Make it a programmatic percentage
-			mines[0].setResetPercent(percentage);
+			} else if (setting.equalsIgnoreCase("fill") || setting.equalsIgnoreCase("fillMode")) {
+				//Match true or false
+				if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("enabled")) {
+					mine.setFillMode(true);
+					sender.sendMessage(phrase("fillModeEnabled"));
+					plugin.buffSave();
+					return;
+				} else if (value.equalsIgnoreCase("false") || value.equalsIgnoreCase("no") || value.equalsIgnoreCase("disabled")) {
+					mine.setFillMode(false);
+					sender.sendMessage(phrase("fillModeDisabled"));
+					plugin.buffSave();
+					return;
+				}
+				sender.sendMessage(phrase("invalidFillMode"));
+			} else if (setting.equalsIgnoreCase("isSilent") || setting.equalsIgnoreCase("silent") || setting.equalsIgnoreCase("silence")) {
+				if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("enabled")) {
+					mine.setSilence(true);
+					sender.sendMessage(phrase("mineIsNowSilent", mine));
+					plugin.buffSave();
+					return;
+				} else if (value.equalsIgnoreCase("false") || value.equalsIgnoreCase("no") || value.equalsIgnoreCase("disabled")) {
+					mine.setSilence(false);
+					sender.sendMessage(phrase("mineIsNoLongerSilent", mine));
+					plugin.buffSave();
+					return;
+				}
+				sender.sendMessage(phrase("badBoolean"));
+			} else if (setting.equalsIgnoreCase("resetPercent")) {
+				StringBuilder psb = new StringBuilder(value);
+				psb.deleteCharAt(psb.length() - 1);
+				double percentage;
+				try {
+					percentage = Double.valueOf(psb.toString());
+				} catch (NumberFormatException nfe) {
+					sender.sendMessage(phrase("badPercentage"));
+					return;
+				}
+				// < 0 is used to cancel percent reset setting.
+				if (percentage > 100) {// || percentage <= 0) {
+					sender.sendMessage(phrase("badPercentage"));
+					return;
+				}
+				percentage = percentage / 100; //Make it a programmatic percentage
+				mine.setResetPercent(percentage);
 
-			if (percentage < 0) {
-				sender.sendMessage(phrase("resetDelayCleared", mines[0]));
-			} else {
-				sender.sendMessage(phrase("resetPercentageSet", mines[0], (int) (percentage * 100)));
+				if (percentage < 0) {
+					sender.sendMessage(phrase("resetDelayCleared", mine));
+				} else {
+					sender.sendMessage(phrase("resetPercentageSet", mine, (int) (percentage * 100)));
+				}
+				plugin.buffSave();
+				return;
 			}
-			plugin.buffSave();
-			return;
 		}
 		sender.sendMessage(phrase("unknownFlag"));
 	}
@@ -539,7 +543,7 @@ public class MineCommands {
 			min = 1, max = -1, onlyPlayers = false)
 	public void erase(CommandSender sender, String[] args) {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
-		if (invalidMInes(sender, mines)) return;
+		if (invalidMines(sender, mines)) return;
 		plugin.eraseMine(mines[0]);
 		sender.sendMessage(phrase("mineErased", mines[0]));
 	}
@@ -580,7 +584,7 @@ public class MineCommands {
 	public void setTP(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Player player = (Player) sender;
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
-		if (invalidMInes(sender, mines)) return;
+		if (invalidMines(sender, mines)) return;
 		mines[0].setTp(player.getLocation());
 		plugin.buffSave();
 		sender.sendMessage(phrase("tpSet", mines[0]));
@@ -590,7 +594,7 @@ public class MineCommands {
 	public void removeTP(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Player player = (Player) sender;
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args));
-		if (invalidMInes(sender, mines)) return;
+		if (invalidMines(sender, mines)) return;
 		mines[0].setTp(new Location(player.getWorld(), 0, -Integer.MAX_VALUE, 0));
 		plugin.buffSave();
 		sender.sendMessage(phrase("tpRemove", mines[0]));
@@ -599,20 +603,24 @@ public class MineCommands {
 	@Command(aliases = {"addpotion", "addpot"}, description = "Adds the specified potion to the mine", help = {"This command will saddthe specified potion to the mine where you're standing.", "Use /mrl removepot <mine name> <potionname> to remove the specified potion effect from the mine."}, usage = "<mine name> <potionname:amplifier>", permissions = {"mineresetlite.mine.addpotion"}, min = 1, max = -1, onlyPlayers = true)
 	public void addPot(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
-		if (invalidMInes(sender, mines)) return;
-		if (mines[0].addPotion(args[args.length - 1]) != null) {
-			plugin.buffSave();
-			sender.sendMessage(phrase("potionAdded", args[args.length - 1], mines[0]));
+		//if (invalidMines(sender, mines)) return;
+		for (Mine mine : mines) {
+			if (mine.addPotion(args[args.length - 1]) != null) {
+				plugin.buffSave();
+				sender.sendMessage(phrase("potionAdded", args[args.length - 1], mine));
+			}
 		}
 	}
 
 	@Command(aliases = {"removepotion", "removepot"}, description = "Removes the specified potion from the mine", help = {"This comamnd will remove the specified potion from the mine.", "Use /mrl removepot <potionname> to remove the potion.", "Use /mrl addpot <mine name> <potionname:amplifier> to add the specified potion effect to the mine."}, usage = "<mine name> <potionname>", permissions = {"mineresetlite.mine.removepotion"}, min = 1, max = -1, onlyPlayers = true)
 	public void removePot(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
-		if (invalidMInes(sender, mines)) return;
-		mines[0].removePotion(args[args.length - 1]);
-		plugin.buffSave();
-		sender.sendMessage(phrase("potionRemoved", args[args.length - 1], mines[0]));
+		//if (invalidMines(sender, mines)) return;
+		for (Mine mine : mines) {
+			mine.removePotion(args[args.length - 1]);
+			plugin.buffSave();
+			sender.sendMessage(phrase("potionRemoved", args[args.length - 1], mine));
+		}
 	}
 
 	@Command(aliases = {"redefine", "rd"},
@@ -687,7 +695,7 @@ public class MineCommands {
 			min = 2, max = -1, onlyPlayers = false)
 	public void setStructure(CommandSender sender, String[] args) {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
-		if (invalidMInes(sender, mines)) return;
+		if (invalidMines(sender, mines)) return;
 		//Match material
 		String[] bits = args[args.length - 1].split(":");
 		Material m = plugin.matchMaterial(bits[0]);
@@ -721,7 +729,7 @@ public class MineCommands {
 			min = 2, max = -1, onlyPlayers = false)
 	public void unsetStructureComposition(CommandSender sender, String[] args) {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
-		if (invalidMInes(sender, mines)) return;
+		if (invalidMines(sender, mines)) return;
 		//Match material
 		String[] bits = args[args.length - 1].split(":");
 		Material m = plugin.matchMaterial(bits[0]);
@@ -759,7 +767,7 @@ public class MineCommands {
 	@Command(aliases = {"setlucky"}, description = "Sets the number of lucky blocks in the specified mine.", help = {"This command will set the number of lucky blocks in the specified mine."}, usage = "<mine name> <a_number_of_lucky_blocks>", permissions = {"mineresetlite.mine.setlucky"}, min = 1, max = -1, onlyPlayers = true)
 	public void setLucky(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
-		if (invalidMInes(sender, mines)) return;
+		if (invalidMines(sender, mines)) return;
 		int num = 0;
 		try {
 			num = Integer.parseInt(args[args.length - 1]);
@@ -777,7 +785,7 @@ public class MineCommands {
 	@Command(aliases = {"makelucky"}, description = "Makes the n-th mined block as a lucky block in the specified mine.", help = {"This command will make the n-th mined block in the specified mine as a lucky block."}, usage = "<mine name> <a_number_of_lucky_block>", permissions = {"mineresetlite.mine.makelucky"}, min = 1, max = -1, onlyPlayers = true)
 	public void makeLucky(CommandSender sender, String[] args) throws InvalidCommandArgumentsException {
 		Mine[] mines = plugin.matchMines(StringTools.buildSpacedArgument(args, 1));
-		if (invalidMInes(sender, mines)) return;
+		if (invalidMines(sender, mines)) return;
 		int num = 0;
 		try {
 			num = Integer.parseInt(args[args.length - 1]);

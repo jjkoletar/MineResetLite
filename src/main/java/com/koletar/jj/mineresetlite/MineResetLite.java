@@ -9,6 +9,7 @@ import com.koletar.jj.mineresetlite.commands.PluginCommands;
 import com.vk2gpz.mineresetlite.listeners.TokenEnchantEventListener;
 import com.vk2gpz.vklib.mc.material.MaterialUtil;
 //import org.bstats.bukkit.Metrics;
+import com.vk2gpz.vklib.text.WildcardUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -267,6 +268,12 @@ public class MineResetLite extends JavaPlugin {
 
     public Mine[] matchMines(String in) {
         List<Mine> matches = new LinkedList<>();
+        for (Mine mine: mines) {
+            if (WildcardUtil.matches(in, mine.getName().toLowerCase())) {
+                matches.add(mine);
+            }
+        }
+        /*
         boolean wildcard = in.contains("*");
         in = in.replace("*", "").toLowerCase();
         for (Mine mine : mines) {
@@ -280,6 +287,7 @@ public class MineResetLite extends JavaPlugin {
                 }
             }
         }
+         */
         return matches.toArray(new Mine[0]);
     }
 
