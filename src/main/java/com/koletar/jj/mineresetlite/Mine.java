@@ -11,7 +11,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -60,15 +59,10 @@ public class Mine implements ConfigurationSerializable {
     List<Integer> luckyNum;
     List<String> luckyCommands;
 
+    private boolean tpAtReset;
+
     public Mine(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, String name, World world) {
-        this.minX = minX;
-        this.minY = minY;
-        this.minZ = minZ;
-        this.maxX = maxX;
-        this.maxY = maxY;
-        this.maxZ = maxZ;
-        this.name = name;
-        this.world = world;
+        redefine(minX, minY, minZ, maxX, maxY, maxZ, world);
         composition = new HashMap<>();
         resetWarnings = new LinkedList<>();
         resetWarningsLastMinute = new LinkedList<>();
@@ -81,22 +75,15 @@ public class Mine implements ConfigurationSerializable {
 
     public Mine(Map<String, Object> me) {
         try {
-            minX = (Integer) me.get("minX");
-            minY = (Integer) me.get("minY");
-            minZ = (Integer) me.get("minZ");
-            maxX = (Integer) me.get("maxX");
-            maxY = (Integer) me.get("maxY");
-            maxZ = (Integer) me.get("maxZ");
+            redefine((Integer) me.get("minX"), (Integer) me.get("minY"), (Integer) me.get("minZ"),
+                    (Integer) me.get("maxX"), (Integer) me.get("maxY"), (Integer) me.get("maxZ"),
+                    Bukkit.getServer().getWorld((String) me.get("world")));
 
             setMaxCount();
         } catch (Throwable t) {
             throw new IllegalArgumentException("Error deserializing coordinate pairs");
         }
-        try {
-            world = Bukkit.getServer().getWorld((String) me.get("world"));
-        } catch (Throwable t) {
-            throw new IllegalArgumentException("Error finding world");
-        }
+
         if (world == null) {
             Logger l = Bukkit.getLogger();
             l.severe("[MineResetLite] Unable to find a world! Please include these logger lines along with the stack trace when reporting this bug!");
@@ -194,6 +181,8 @@ public class Mine implements ConfigurationSerializable {
         if (me.containsKey("lucky_commands")) {
             setLuckyCommands((List<String>) me.get("lucky_commands"));
         }
+
+        tpAtReset = !me.containsKey("tpAtReset") || (boolean) me.get("tpAtReset");
     }
 
     public Map<String, Object> serialize() {
@@ -251,6 +240,8 @@ public class Mine implements ConfigurationSerializable {
 
         me.put("lucky_blocks", luckyBlocks);
         me.put("lucky_commands", luckyCommands);
+
+        me.put("tpAtReset", tpAtReset);
 
         return me;
     }
@@ -349,6 +340,14 @@ public class Mine implements ConfigurationSerializable {
                 && (l.getBlockZ() >= minZ && l.getBlockZ() <= maxZ);
     }
 
+    public boolean tpAtReset() {
+        return tpAtReset;
+    }
+
+    public void setTpAtReset(boolean tpatreset) {
+        this.tpAtReset = tpatreset;
+    }
+
     public void setTp(Location l) {
         tpX = l.getBlockX();
         tpY = l.getBlockY();
@@ -374,22 +373,10 @@ public class Mine implements ConfigurationSerializable {
                 //Get probability map
                 List<CompositionEntry> probabilityMap = mapComposition(composition);
                 //Pull players out
-                for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-                    Location l = p.getLocation();
-                    if (isInside(p)) {
-                        //p.teleport(new Location(world, l.getX(), maxY + 2D, l.getZ()));
-                        if (tpY > -Integer.MAX_VALUE) {
-                            p.teleport(getTp());
-                        } else { // empty spawn location!
-                            // find the safe landing location!
-                            Location tp = new Location(world, l.getX(), maxY + 1D, l.getZ());
-                            Block block = tp.getBlock();
-
-                            // check to make sure we don't suffocate player
-                            if (block.getType() != Material.AIR || block.getRelative(BlockFace.UP).getType() != Material.AIR) {
-                                tp = new Location(world, l.getX(), l.getWorld().getHighestBlockYAt(l.getBlockX(), l.getBlockZ()), l.getZ());
-                            }
-                            p.teleport(tp);
+                if (tpAtReset) {
+                    for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+                        if (isInside(p)) {
+                            teleport(p, true);
                         }
                     }
                 }
@@ -577,23 +564,29 @@ public class Mine implements ConfigurationSerializable {
     }
 
     public void teleport(Player player) {
-        Location location;
+        teleport(player, false);
+    }
 
-        if (!getTp().equals(new Location(world, 0, -Integer.MAX_VALUE, 0))) {
-            location = getTp();
+    private void teleport(Player player, boolean straight_up) {
+        Location destination;
+
+        if (tpY != -Integer.MAX_VALUE) {
+            destination = getTp();
         } else {
-            Location max = new Location(world, Math.max(this.maxX, this.minX), this.maxY, Math.max(this.maxZ, this.minZ));
-            Location min = new Location(world, Math.min(this.maxX, this.minX), this.minY, Math.min(this.maxZ, this.minZ));
-
-            location = max.add(min).multiply(0.5);
-            Block block = location.getBlock();
+            if (straight_up) {
+                Location playerLocation = player.getLocation();
+                destination = new Location(world, playerLocation.getX(), maxY + 1D, playerLocation.getZ());
+            } else {
+                destination = this.centerOfGravity;
+            }
+            Block block = destination.getBlock();
 
             if (block.getType() != Material.AIR || block.getRelative(BlockFace.UP).getType() != Material.AIR) {
-                location = new Location(world, location.getX(), location.getWorld().getHighestBlockYAt(location.getBlockX(), location.getBlockZ()), location.getZ());
+                destination = new Location(world, destination.getX(), destination.getWorld().getHighestBlockYAt(destination.getBlockX(), destination.getBlockZ()), destination.getZ());
             }
         }
 
-        player.teleport(location);
+        player.teleport(destination);
     }
 
     private void setMaxCount() {
@@ -707,6 +700,17 @@ public class Mine implements ConfigurationSerializable {
         this.maxY = maxY;
         this.maxZ = maxZ;
         this.world = world;
+
+        computeCenterOfGravity(this.world, this.minX, this.maxX, this.minY, this.maxY, this.minZ, this.maxZ);
+    }
+
+    private Location centerOfGravity;
+    private Location computeCenterOfGravity(World w, int min_x, int max_x, int min_y, int max_y, int min_z, int max_z) {
+        Location max = new Location(w, Math.max(max_x, min_x), max_y, Math.max(max_z, min_z));
+        Location min = new Location(w, Math.min(max_x, min_x), min_y, Math.min(max_z, min_z));
+
+        centerOfGravity = max.add(min).multiply(0.5);
+        return centerOfGravity;
     }
 
     public void setLuckyBlockNum(int num) {

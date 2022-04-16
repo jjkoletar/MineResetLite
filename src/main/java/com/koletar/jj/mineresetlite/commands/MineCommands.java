@@ -111,19 +111,25 @@ public class MineCommands {
 			//System.out.println("point1 : " + p1);
 			//System.out.println("point2 : " + p2);
 		}
-		Object[] selections = WorldGuardUtil.getSelection(plugin, player);
-		if (selections != null && selections[1] != null && selections[2] != null) {
-			world = (World) selections[0];
-			p1 = (Vector) selections[1];
-			p2 = (Vector) selections[2];
-			//System.out.println("WE point1 : " + p1);
-			//System.out.println("WE point2 : " + p2);
-		}
+		try {
+			Object[] selections = WorldGuardUtil.getSelection(plugin, player);
+			if (selections != null && selections[1] != null && selections[2] != null) {
+				world = (World) selections[0];
+				p1 = (Vector) selections[1];
+				p2 = (Vector) selections[2];
+				//System.out.println("WE point1 : " + p1);
+				//System.out.println("WE point2 : " + p2);
+			}
 
-		if (p1 == null) {
+			if (p1 == null) {
+				player.sendMessage(phrase("emptySelection"));
+				return;
+			}
+		} catch (Exception regionException) {
 			player.sendMessage(phrase("emptySelection"));
 			return;
 		}
+
 		//Construct mine name
 		String name = StringTools.buildSpacedArgument(args);
 		//Verify uniqueness of mine name
@@ -358,7 +364,9 @@ public class MineCommands {
 					"surface: A block that will cover the entire top surface of the mine when reset, obscuring surface ores. Set surface to air to clear the value.",
 					"fillMode: An alternate reset algorithm that will only \"reset\" air blocks inside your mine. Set to true or false.",
 					"fillMode: An alternate reset algorithm that will only \"reset\" air blocks inside your mine. Set to true or false.",
-					"isSilent: A boolean (true or false) of whether or not this mine should broadcast a reset notification when it is reset *automatically*"},
+					"isSilent: A boolean (true or false) of whether or not this mine should broadcast a reset notification when it is reset *automatically*",
+					"tpAtReset: A boolean (true or false) of whether or not players in the mine should be teleported at the reset."
+			},
 			usage = "<mine name> <setting> <value>",
 			permissions = {"mineresetlite.mine.flag"},
 			min = 3, max = -1, onlyPlayers = false)
@@ -530,6 +538,19 @@ public class MineCommands {
 				}
 				plugin.buffSave();
 				return;
+			} else if (setting.equalsIgnoreCase("tpAtReset")) {
+				if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("enabled")) {
+					mine.setTpAtReset(true);
+					sender.sendMessage(phrase("mineTpAtReset", mine));
+					plugin.buffSave();
+					return;
+				} else if (value.equalsIgnoreCase("false") || value.equalsIgnoreCase("no") || value.equalsIgnoreCase("disabled")) {
+					mine.setTpAtReset(false);
+					sender.sendMessage(phrase("mineNoTpAtReset", mine));
+					plugin.buffSave();
+					return;
+				}
+				sender.sendMessage(phrase("badBoolean"));
 			}
 		}
 		sender.sendMessage(phrase("unknownFlag"));
