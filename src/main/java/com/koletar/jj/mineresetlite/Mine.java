@@ -62,6 +62,7 @@ public class Mine implements ConfigurationSerializable {
     private boolean tpAtReset;
 
     public Mine(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, String name, World world) {
+        this.name = name;
         redefine(minX, minY, minZ, maxX, maxY, maxZ, world);
         composition = new HashMap<>();
         resetWarnings = new LinkedList<>();

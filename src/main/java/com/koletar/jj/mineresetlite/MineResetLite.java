@@ -118,19 +118,18 @@ public class MineResetLite extends JavaPlugin {
             }
             Phrases.getInstance().overrides(overridesProps);
         }
-        //Look for worldedit
+        // Look for worldedit
         if (getServer().getPluginManager().isPluginEnabled("WorldEdit")) {
             worldEdit = (WorldEditPlugin) getServer().getPluginManager().getPlugin("WorldEdit");
         }
 
         // All you have to do is adding this line in your onEnable method:
-        //Metrics metrics = new Metrics(this);
+        // Metrics metrics = new Metrics(this);
 
         // Optional: Add custom charts
-        //metrics.addCustomChart(new Metrics.SimplePie("chart_id", () -> "My value"));
+        // metrics.addCustomChart(new Metrics.SimplePie("chart_id", () -> "My value"));
 
-
-        //Load mines
+        // Load mines
         File[] mineFiles = new File(getDataFolder(), "mines").listFiles(new IsMineFile());
         assert mineFiles != null;
         for (File file : mineFiles) {
@@ -157,16 +156,17 @@ public class MineResetLite extends JavaPlugin {
                 mine.cron();
             }
         }, 60 * 20L, 60 * 20L);
-        //Check for updates
+        // Check for updates
         /*
-        if (!getDescription().getVersion().contains("dev")) {
-            updateTask = getServer().getScheduler().runTaskLaterAsynchronously(this, new Runnable() {
-                public void run() {
-                    checkUpdates();
-                }
-            }, 20 * 15);
-        }
-        */
+         * if (!getDescription().getVersion().contains("dev")) {
+         * updateTask = getServer().getScheduler().runTaskLaterAsynchronously(this, new
+         * Runnable() {
+         * public void run() {
+         * checkUpdates();
+         * }
+         * }, 20 * 15);
+         * }
+         */
         getServer().getPluginManager().registerEvents(new UpdateWarner(), this);
         registerListener();
         logger.info("MineResetLite version " + getDescription().getVersion() + " enabled!");
@@ -174,11 +174,12 @@ public class MineResetLite extends JavaPlugin {
 
     private boolean tePresent() {
         try {
-            Class klass = Class.forName("com.vk2gpz.tokenenchant.event.TEBlockExplodeEvent");
-            return true;
-        } catch (Throwable ignore) {
-
+            Class.forName("com.vk2gpz.tokenenchant.event.TEBlockExplodeEvent");
+        } catch (ClassNotFoundException e) {
+            //e.printStackTrace();
+            logger.info("TokenEnchant was not found... skipping.");
         }
+
         return false;
     }
 
@@ -201,7 +202,8 @@ public class MineResetLite extends JavaPlugin {
             conn.addRequestProperty("User-Agent", "MineResetLite/v" + getDescription().getVersion() + " by jjkoletar");
             String rv = new BufferedReader(new InputStreamReader(conn.getInputStream())).readLine();
             JSONArray resp = (JSONArray) JSONValue.parse(rv);
-            if (resp.size() == 0) return;
+            if (resp.size() == 0)
+                return;
             String name = ((JSONObject) resp.get(resp.size() - 1)).get("name").toString();
             String[] bits = name.split(" ");
             String remoteVer = bits[bits.length - 1];
@@ -223,14 +225,15 @@ public class MineResetLite extends JavaPlugin {
             updateTask.cancel();
         }
         HandlerList.unregisterAll(this);
-        //save();
+        // save();
         logger.info("MineResetLite disabled");
     }
 
     public Material matchMaterial(String name) {
         Material ret = MaterialUtil.getMaterial(name);
         if (ret == null) {
-            //If anyone can think of a more elegant way to serve this function, let me know. ~
+            // If anyone can think of a more elegant way to serve this function, let me
+            // know. ~
             if (name.equalsIgnoreCase("diamondore")) {
                 ret = Material.DIAMOND_ORE;
             } else if (name.equalsIgnoreCase("diamondblock")) {
@@ -255,8 +258,9 @@ public class MineResetLite extends JavaPlugin {
                 ret = Material.LAPIS_ORE;
             } else if (name.equalsIgnoreCase("lapisblock")) {
                 ret = Material.LAPIS_BLOCK;
-            } else if (name.equalsIgnoreCase("snowblock") || name.equalsIgnoreCase("snow")) { //I've never seen a mine with snowFALL in it.
-                ret = Material.SNOW_BLOCK;                                                   //Maybe I'll be proven wrong, but it helps 99% of admins.
+            } else if (name.equalsIgnoreCase("snowblock") || name.equalsIgnoreCase("snow")) { // I've never seen a mine
+                                                                                              // with snowFALL in it.
+                ret = Material.SNOW_BLOCK; // Maybe I'll be proven wrong, but it helps 99% of admins.
             } else if (name.equalsIgnoreCase("redstoneore")) {
                 ret = Material.REDSTONE_ORE;
             } else {
@@ -268,25 +272,31 @@ public class MineResetLite extends JavaPlugin {
 
     public Mine[] matchMines(String in) {
         List<Mine> matches = new LinkedList<>();
-        for (Mine mine: mines) {
-            if (WildcardUtil.matches(in, mine.getName().toLowerCase())) {
-                matches.add(mine);
+        for (Mine mine : mines) {
+            try {
+                if (WildcardUtil.matches(in, mine.getName())) {
+                    matches.add(mine);
+                }
+            } catch (IllegalArgumentException e) {
+                logger.info("mine name : " + mine.getName());
+                logger.info("skipping... you can safely ignore the following exception.");
+                e.printStackTrace();
             }
         }
         /*
-        boolean wildcard = in.contains("*");
-        in = in.replace("*", "").toLowerCase();
-        for (Mine mine : mines) {
-            if (wildcard) {
-                if (mine.getName().toLowerCase().contains(in)) {
-                    matches.add(mine);
-                }
-            } else {
-                if (mine.getName().equalsIgnoreCase(in)) {
-                    matches.add(mine);
-                }
-            }
-        }
+         * boolean wildcard = in.contains("*");
+         * in = in.replace("*", "").toLowerCase();
+         * for (Mine mine : mines) {
+         * if (wildcard) {
+         * if (mine.getName().toLowerCase().contains(in)) {
+         * matches.add(mine);
+         * }
+         * } else {
+         * if (mine.getName().equalsIgnoreCase(in)) {
+         * matches.add(mine);
+         * }
+         * }
+         * }
          */
         return matches.toArray(new Mine[0]);
     }
@@ -304,16 +314,18 @@ public class MineResetLite extends JavaPlugin {
     }
 
     /**
-     * Alert the plugin that changes have been made to mines, but wait 60 seconds before we save.
-     * This process saves on disk I/O by waiting until a long string of changes have finished before writing to disk.
+     * Alert the plugin that changes have been made to mines, but wait 60 seconds
+     * before we save.
+     * This process saves on disk I/O by waiting until a long string of changes have
+     * finished before writing to disk.
      */
     public void buffSave() {
         BukkitScheduler scheduler = getServer().getScheduler();
         if (saveTaskId != -1) {
-            //Cancel old task
+            // Cancel old task
             scheduler.cancelTask(saveTaskId);
         }
-        //Schedule save
+        // Schedule save
         final MineResetLite plugin = this;
         scheduler.scheduleSyncDelayedTask(this, plugin::save, 60 * 20L);
     }
@@ -377,13 +389,13 @@ public class MineResetLite extends JavaPlugin {
                 commandManager.callCommand("help", sender, helpArgs);
                 return true;
             }
-            //Spoof args array to account for the initial subcommand specification
+            // Spoof args array to account for the initial subcommand specification
             String[] spoofedArgs = new String[args.length - 1];
             System.arraycopy(args, 1, spoofedArgs, 0, args.length - 1);
             commandManager.callCommand(args[0], sender, spoofedArgs);
             return true;
         }
-        return false; //Fallthrough
+        return false; // Fallthrough
     }
 
     public static void broadcast(String message, Mine mine) {
